@@ -205,6 +205,15 @@ h1 {
     font-weight: 500;
 }
 
+/* In-prose links (rare): ink with a hairline underline, rubric on hover --
+   the table-of-contents idiom, not browser blue. */
+.prayer a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+}
+.prayer a:hover { color: var(--rubric); border-color: var(--rubric); }
+
 .finis {
     text-align: center;
     color: var(--rubric);
