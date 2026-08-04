@@ -61,8 +61,11 @@ if (hint) {
     try { dismissed = localStorage.getItem("prayers-hint") === "dismissed"; } catch (e) {}
     if (mobile && !standalone && !dismissed) {
         hint.textContent = ios
-            ? "This book can live on your home screen: tap Share, then Add to Home Screen. (tap to dismiss)"
-            : "This book can live on your home screen and reads offline. (tap to dismiss)";
+            ? "This site can live on your home screen: tap Share, then Add to Home Screen."
+            : "This site can live on your home screen and reads offline.";
+        const dismiss = document.createElement("span");
+        dismiss.textContent = "(tap to dismiss)";
+        hint.appendChild(dismiss);
         hint.hidden = false;
         hint.addEventListener("click", () => {
             hint.remove();
