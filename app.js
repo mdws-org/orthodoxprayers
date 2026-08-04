@@ -1,4 +1,5 @@
 // Theme toggle + measured drop cap. ES module, deferred by default.
+import { prepare, layout } from "./vendor/pretext.js";
 
 /* ---- Theme: one button toggling day <-> night ------------------------
    There is no "system" position on the button. A visitor with no stored
@@ -103,12 +104,14 @@ function markRunIn() {
 }
 markRunIn();
 
-/* ---- Drop cap: size the cap to span two lines exactly ---------------- */
+/* ---- Drop cap: size the cap to span whole lines exactly -------------- */
 // The CSS ::first-letter float is the no-JS baseline. Here we measure the
-// real loaded font (canvas metrics for the cap glyph) and set
-// --cap-size/--cap-pad so the cap's height equals exactly two text lines --
-// the ordinary initial size in the printed books, whose bigger initials are
-// reserved for a section's first prayer.
+// real loaded font (canvas metrics for the cap glyph; Pretext layout() for
+// the paragraph) and set --cap-size/--cap-pad so the cap's height equals an
+// exact number of text lines: 3 when the opening paragraph runs at least 3
+// lines beside the cap, 2 otherwise (narrow screens). Pretext's layout() is
+// what answers "how many lines will this paragraph occupy at this width"
+// without touching the DOM.
 function fitDropCap() {
     const p = document.querySelector(".prayer p.opening");
     if (!p) return;
@@ -116,8 +119,10 @@ function fitDropCap() {
     const fontPx = parseFloat(cs.fontSize);
     const lineH = parseFloat(cs.lineHeight);
     const family = cs.fontFamily;
+    const font = `${cs.fontWeight} ${fontPx}px ${family}`;
 
-    const capChar = p.textContent.trimStart().charAt(0);
+    const text = p.textContent;
+    const capChar = text.trimStart().charAt(0);
 
     // Cap glyph metrics at a probe size.
     const ctx = document.createElement("canvas").getContext("2d");
@@ -129,12 +134,24 @@ function fitDropCap() {
         (m.actualBoundingBoxDescent || 0);
 
     // Body cap height (an "O" of the text) -- the cap's top should align with
-    // the first line's cap top, its bottom with the second baseline.
-    ctx.font = `${cs.fontWeight} ${fontPx}px ${family}`;
+    // the first line's cap top, its bottom with the Nth baseline.
+    ctx.font = font;
     const bm = ctx.measureText("O");
     const bodyCapH = bm.actualBoundingBoxAscent || fontPx * 0.7;
 
-    const targetH = lineH + bodyCapH;
+    const width = p.getBoundingClientRect().width;
+    let lines = 3;
+    // Ask Pretext how many lines the paragraph runs beside a 3-line cap; if
+    // fewer, drop to a 2-line cap. (Cap width estimated at target size.)
+    try {
+        const targetH3 = (3 - 1) * lineH + bodyCapH;
+        const capW3 = m.width * (targetH3 / capHeightAtProbe);
+        const prepared = prepare(text.slice(1), font);
+        const beside = layout(prepared, Math.max(60, width - capW3 - 12), lineH);
+        if (beside.lineCount < 3) lines = 2;
+    } catch (e) { /* keep 3-line default */ }
+
+    const targetH = (lines - 1) * lineH + bodyCapH;
     const capPx = PROBE * (targetH / capHeightAtProbe);
     p.style.setProperty("--cap-size", (capPx / fontPx).toFixed(3) + "em");
     p.style.setProperty("--cap-pad", "0.02em 0.14em 0 0");
