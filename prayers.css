@@ -209,6 +209,28 @@ h1 {
     margin-top: 2.2rem;
 }
 
+/* Install hint: one line at the bottom of the index, in flow (never a modal,
+   never over the text). Rendered as a button so tapping it is honest
+   semantics -- the tap dismisses it permanently (app.js). Hidden until app.js
+   decides it applies: not shown when already running standalone. */
+.hint {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    font-family: var(--serif);
+    text-align: center;
+    color: var(--ink-soft);
+    font-style: italic;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-top: 2.4rem;
+    padding: 0;
+    cursor: pointer;
+}
+.hint:hover { color: var(--rubric); }
+.hint[hidden] { display: none; }
+
 footer {
     margin-top: auto;
     text-align: center;

@@ -40,6 +40,31 @@ if (themeBtn) {
     }
 }
 
+/* ---- Install hint (index only) ---------------------------------------
+   One line at the bottom of the page, in flow. Shown only when the page is
+   not already running standalone; a tap dismisses it permanently. iOS has no
+   install API (Safari lacks beforeinstallprompt), so the most a hint can do
+   there is name the gesture. */
+const hint = document.getElementById("install-hint");
+if (hint) {
+    const standalone =
+        (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+        window.navigator.standalone === true;
+    let dismissed = false;
+    try { dismissed = localStorage.getItem("prayers-hint") === "dismissed"; } catch (e) {}
+    if (!standalone && !dismissed) {
+        const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+        hint.textContent = ios
+            ? "This book can live on your home screen: tap Share, then Add to Home Screen. (tap to dismiss)"
+            : "This book can live on your home screen and reads offline. (tap to dismiss)";
+        hint.hidden = false;
+        hint.addEventListener("click", () => {
+            hint.hidden = true;
+            try { localStorage.setItem("prayers-hint", "dismissed"); } catch (e) {}
+        });
+    }
+}
+
 /* ---- Psalter: today's kathisma --------------------------------------- */
 // Day-of-month rule: kathisma 1 on the 1st through kathisma 20 on the 20th,
 // wrapping on the 21st. Highlights the entry and fills the pointer line.
