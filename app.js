@@ -28,8 +28,16 @@ if (themeBtn) {
     describe(themeBtn);
     themeBtn.addEventListener("click", () => {
         const next = effectiveTheme() === "night" ? "day" : "night";
-        document.documentElement.dataset.theme = next;
-        try { localStorage.setItem("prayers-theme", next); } catch (e) {}
+        if (next === systemTheme()) {
+            // The tap lands back on what the system already shows: return to
+            // follow-the-system silently instead of pinning an override that
+            // happens to match it today.
+            delete document.documentElement.dataset.theme;
+            try { localStorage.removeItem("prayers-theme"); } catch (e) {}
+        } else {
+            document.documentElement.dataset.theme = next;
+            try { localStorage.setItem("prayers-theme", next); } catch (e) {}
+        }
         describe(themeBtn);
     });
     // Still following the system? Then keep the label honest if it changes.
