@@ -228,6 +228,11 @@ h1 {
     padding: 0;
     cursor: pointer;
 }
+.hint span {
+    display: block;
+    font-size: 0.8rem;
+    margin-top: 0.15rem;
+}
 .hint:hover { color: var(--rubric); }
 .hint[hidden] { display: none; }
 
