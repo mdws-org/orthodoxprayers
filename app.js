@@ -76,6 +76,122 @@ if (hint) {
     }
 }
 
+/* ---- Opening word: drop cap + small-caps run-in ---------------------- */
+// The printed books run the rest of the first word in small caps after the
+// initial ("T HROUGH", "R ISING"). When the first word is a single letter
+// ("O", "I"), the run-in extends through the following word ("O GOD").
+// Trailing punctuation stays in ordinary type.
+function markRunIn() {
+    const p = document.querySelector(".prayer p.opening");
+    if (!p || p.querySelector(".runin")) return;
+    const node = p.firstChild;
+    if (!node || node.nodeType !== 3) return;
+    const text = node.nodeValue;
+    const m = text.match(/^(\s*)(\S+)(\s+)(\S+)?/);
+    if (!m) return;
+    const capEnd = m[1].length + 1;
+    let runEnd = m[1].length + m[2].length;
+    if (m[2].length === 1 && m[4]) runEnd = m[1].length + m[2].length + m[3].length + m[4].length;
+    while (runEnd > capEnd && /[,.;:!?'"\u2019\u201d]/.test(text[runEnd - 1])) runEnd--;
+    if (runEnd <= capEnd) return;
+    const span = document.createElement("span");
+    span.className = "runin";
+    span.textContent = text.slice(capEnd, runEnd);
+    const rest = document.createTextNode(text.slice(runEnd));
+    node.nodeValue = text.slice(0, capEnd);
+    p.insertBefore(span, node.nextSibling);
+    p.insertBefore(rest, span.nextSibling);
+}
+markRunIn();
+
+/* ---- Drop cap: size the cap to span whole lines exactly -------------- */
+// The CSS ::first-letter float is the no-JS baseline. Here we measure the
+// real loaded font (canvas metrics for the cap glyph; Pretext layout() for
+// the paragraph) and set --cap-size/--cap-pad so the cap's height equals an
+// exact number of text lines: 3 when the opening paragraph runs at least 3
+// lines beside the cap, 2 otherwise (narrow screens). Pretext's layout() is
+// what answers "how many lines will this paragraph occupy at this width"
+// without touching the DOM.
+function fitDropCap() {
+    const p = document.querySelector(".prayer p.opening");
+    if (!p) return;
+    const cs = getComputedStyle(p);
+    const fontPx = parseFloat(cs.fontSize);
+    const lineH = parseFloat(cs.lineHeight);
+    const family = cs.fontFamily;
+    const font = `${cs.fontWeight} ${fontPx}px ${family}`;
+
+    const text = p.textContent;
+    const capChar = text.trimStart().charAt(0);
+
+    // Cap glyph metrics at a probe size.
+    const ctx = document.createElement("canvas").getContext("2d");
+    const PROBE = 100;
+    ctx.font = `500 ${PROBE}px ${family}`;
+    const m = ctx.measureText(capChar);
+    const capHeightAtProbe =
+        (m.actualBoundingBoxAscent || PROBE * 0.7) +
+        (m.actualBoundingBoxDescent || 0);
+
+    // Body cap height (an "O" of the text) -- the cap's top should align with
+    // the first line's cap top, its bottom with the Nth baseline.
+    ctx.font = font;
+    const bm = ctx.measureText("O");
+    const bodyCapH = bm.actualBoundingBoxAscent || fontPx * 0.7;
+
+    const width = p.getBoundingClientRect().width;
+    let lines = 3;
+    // Ask Pretext how many lines the paragraph runs beside a 3-line cap; if
+    // fewer, drop to a 2-line cap. (Cap width estimated at target size.)
+    try {
+        const targetH3 = (3 - 1) * lineH + bodyCapH;
+        const capW3 = m.width * (targetH3 / capHeightAtProbe);
+        const prepared = prepare(text.slice(1), font);
+        const beside = layout(prepared, Math.max(60, width - capW3 - 12), lineH);
+        if (beside.lineCount < 3) lines = 2;
+    } catch (e) { /* keep 3-line default */ }
+
+    const targetH = (lines - 1) * lineH + bodyCapH;
+    const capPx = PROBE * (targetH / capHeightAtProbe);
+    p.style.setProperty("--cap-size", (capPx / fontPx).toFixed(3) + "em");
+    p.style.setProperty("--cap-pad", "0.02em 0.14em 0 0");
+}
+
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(fitDropCap);
+} else {
+    fitDropCap();
+}
+let resizeT;
+addEventListener("resize", () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(fitDropCap, 150);
+});
+
+/* ---- Masthead: daily-rotating ornament bar ---------------------------- */
+// A small curated subset of Orthodox Illustration Project bars. The pick is
+// seeded by the calendar day (plus a per-page offset from data-rotate), so
+// every visitor sees the same bar on a given day, pages differ from each
+// other, and the ornament turns over at midnight. The static src in the HTML
+// is the no-JS fallback.
+const BARS = [
+    ["bar2", 2816, 477],
+    ["bar8", 2741, 418],
+    ["bar12", 4371, 718],
+    ["bar13", 5087, 647],
+    ["bar19", 2243, 479],
+    ["bar20", 2556, 565],
+];
+const masthead = document.querySelector(".ornament[data-rotate]");
+if (masthead) {
+    const day = Math.floor(Date.now() / 864e5);
+    const offset = parseInt(masthead.dataset.rotate, 10) || 0;
+    const [name, w, h] = BARS[(day + offset) % BARS.length];
+    masthead.src = "/art/bars/" + name + ".svg";
+    masthead.width = w;
+    masthead.height = h;
+}
+
 /* ---- Psalter: today's kathisma --------------------------------------- */
 // Day-of-month rule: kathisma 1 on the 1st through kathisma 20 on the 20th,
 // wrapping on the 21st. Highlights the entry and fills the pointer line.

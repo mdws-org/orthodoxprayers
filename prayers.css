@@ -145,10 +145,9 @@ h1 {
 }
 .attribution {
     text-align: center;
-    color: var(--ink-soft);
-    font-variant: small-caps;
-    letter-spacing: 0.14em;
-    font-size: 0.95rem;
+    color: var(--rubric);
+    font-style: italic;
+    font-size: 1rem;
     margin-bottom: 2.2rem;
 }
 .rule {
@@ -167,6 +166,22 @@ h1 {
 /* Drop cap. CSS float is the no-JS baseline; app.js refines --cap-size and
    --cap-pad with measured font metrics (via Pretext) so the cap spans whole
    lines exactly in whatever font actually loaded. */
+/* Small red cross above the section title, as the printed books head their
+   pages. */
+.head-cross {
+    text-align: center;
+    color: var(--rubric);
+    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
+}
+
+/* The rest of the opening word runs in small caps after the initial
+   (markRunIn in app.js). */
+.prayer p.opening .runin {
+    font-variant: small-caps;
+    letter-spacing: 0.05em;
+}
+
 .prayer p.opening::first-letter {
     color: var(--rubric);
     font-size: var(--cap-size, 3.4em);
