@@ -81,29 +81,29 @@ header a {
     font-size: 1rem;
 }
 header a:hover { color: var(--rubric); }
-/* The glyph is set in CSS, not markup, so it is correct before first paint
-   and with JS off. It mirrors the palette resolution above exactly: explicit
-   data-theme wins, otherwise the system preference decides. U+FE0E forces
-   text presentation -- without it iOS renders the sun as a colour emoji. */
+/* The label is set in CSS, not markup, so it is correct before first paint
+   and with JS off. It names the mode a tap switches TO, and mirrors the
+   palette resolution above exactly: explicit data-theme wins, otherwise the
+   system preference decides. Small caps to match the header link. */
 #theme {
     font-family: var(--serif);
-    font-size: 1.15rem;
+    font-size: 1rem;
     line-height: 1;
     background: none;
     border: none;
-    padding: 0;
+    padding: 0.55rem 0;
     color: var(--ink-soft);
-    width: 2.2rem;
-    height: 2.2rem;
+    font-variant: small-caps;
+    letter-spacing: 0.12em;
     cursor: pointer;
 }
 #theme:hover { color: var(--rubric); }
-#theme::before { content: "\2600\FE0E"; }
-:root[data-theme="night"] #theme::before { content: "\263D\FE0E"; }
+#theme::before { content: "Night"; }
+:root[data-theme="night"] #theme::before { content: "Day"; }
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="day"]) #theme::before { content: "\263D\FE0E"; }
+    :root:not([data-theme="day"]) #theme::before { content: "Day"; }
 }
-:root[data-theme="day"] #theme::before { content: "\2600\FE0E"; }
+:root[data-theme="day"] #theme::before { content: "Night"; }
 
 main.page {
     max-width: 34em;
@@ -184,7 +184,7 @@ h1 {
 
 .prayer p.opening::first-letter {
     color: var(--rubric);
-    font-size: var(--cap-size, 3.4em);
+    font-size: var(--cap-size, 2.4em);
     float: left;
     line-height: 0.82;
     padding: var(--cap-pad, 0.06em 0.12em 0 0);
