@@ -213,6 +213,9 @@ h1 {
    never over the text). Rendered as a button so tapping it is honest
    semantics -- the tap dismisses it permanently (app.js). Hidden until app.js
    decides it applies: not shown when already running standalone. */
+/* Set as a rubric: the printed books give instructions to the reader in red
+   italics, and this is an instruction to the reader. The dismiss note stays
+   in the quiet ink so the red line reads as the rubric, not the pair. */
 .hint {
     display: block;
     width: 100%;
@@ -220,7 +223,7 @@ h1 {
     border: none;
     font-family: var(--serif);
     text-align: center;
-    color: var(--ink-soft);
+    color: var(--rubric);
     font-style: italic;
     font-size: 0.9rem;
     line-height: 1.5;
@@ -230,10 +233,11 @@ h1 {
 }
 .hint span {
     display: block;
+    color: var(--ink-soft);
     font-size: 0.8rem;
     margin-top: 0.15rem;
 }
-.hint:hover { color: var(--rubric); }
+.hint:hover { opacity: 0.75; }
 .hint[hidden] { display: none; }
 
 footer {
