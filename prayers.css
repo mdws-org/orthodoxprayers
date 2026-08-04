@@ -64,22 +64,32 @@ body {
 }
 
 /* Header: static, quiet. One nav link left, one theme button right. */
+/* Running head: section title at the left margin, Day/Night at the right,
+   tied by a hairline rule -- the printed books' title-and-folio line. The
+   two ends are styled identically on purpose: the left is a link and the
+   right is a control, but the typography refuses to admit it. */
 header {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     max-width: 38em;
     width: 100%;
     margin: 0 auto;
-    padding: 1.1rem 1.25rem 0;
+    padding: 1.2rem 1.25rem 0;
 }
-header a {
+header a,
+header span {
     color: var(--ink-soft);
     text-decoration: none;
     font-variant: small-caps;
     letter-spacing: 0.12em;
     font-size: 1rem;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.55rem;
+    flex: 1;
 }
+header span { cursor: default; }
+header a { text-align: left; }
 header a:hover { color: var(--rubric); }
 /* The label is set in CSS, not markup, so it is correct before first paint
    and with JS off. It names the mode a tap switches TO, and mirrors the
@@ -88,14 +98,18 @@ header a:hover { color: var(--rubric); }
 #theme {
     font-family: var(--serif);
     font-size: 1rem;
-    line-height: 1;
+    line-height: inherit;
     background: none;
     border: none;
-    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--rule);
+    border-radius: 0;
+    padding: 0 0 0.55rem;
     color: var(--ink-soft);
     font-variant: small-caps;
     letter-spacing: 0.12em;
     cursor: pointer;
+    flex: 1;
+    text-align: right;
 }
 #theme:hover { color: var(--rubric); }
 #theme::before { content: "Night"; }
