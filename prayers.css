@@ -184,7 +184,7 @@ h1 {
 
 .prayer p.opening::first-letter {
     color: var(--rubric);
-    font-size: var(--cap-size, 2.4em);
+    font-size: var(--cap-size, 3.4em);
     float: left;
     line-height: 0.82;
     padding: var(--cap-pad, 0.06em 0.12em 0 0);
