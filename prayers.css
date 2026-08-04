@@ -1,9 +1,10 @@
 /* / — prayer-book design per the Hieratikon brief
    (projects/prayers-experiment-scope.md in arch's home).
    Two palettes: Day (parchment) and Night (vigil). Auto follows the system.
-   Theme resolution: no data-theme or data-theme="auto" on <html> follows
-   prefers-color-scheme; explicit "day"/"night" forces one. theme.js sets the
-   attribute before first paint so there is no flash. */
+   Theme resolution: no data-theme on <html> follows prefers-color-scheme;
+   explicit "day"/"night" forces one. That is the whole model -- there is no
+   "auto" value and no third button position. theme.js sets the attribute
+   before first paint so there is no flash. */
 
 @font-face {
     font-family: 'EB Garamond';
@@ -80,19 +81,29 @@ header a {
     font-size: 1rem;
 }
 header a:hover { color: var(--rubric); }
+/* The glyph is set in CSS, not markup, so it is correct before first paint
+   and with JS off. It mirrors the palette resolution above exactly: explicit
+   data-theme wins, otherwise the system preference decides. U+FE0E forces
+   text presentation -- without it iOS renders the sun as a colour emoji. */
 #theme {
     font-family: var(--serif);
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     line-height: 1;
     background: none;
-    border: 1px solid var(--rule);
-    border-radius: 999px;
+    border: none;
+    padding: 0;
     color: var(--ink-soft);
     width: 2.2rem;
     height: 2.2rem;
     cursor: pointer;
 }
-#theme:hover { color: var(--rubric); border-color: var(--rubric); }
+#theme:hover { color: var(--rubric); }
+#theme::before { content: "\2600\FE0E"; }
+:root[data-theme="night"] #theme::before { content: "\263D\FE0E"; }
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="day"]) #theme::before { content: "\263D\FE0E"; }
+}
+:root[data-theme="day"] #theme::before { content: "\2600\FE0E"; }
 
 main.page {
     max-width: 34em;
