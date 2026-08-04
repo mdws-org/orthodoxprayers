@@ -40,28 +40,36 @@ if (themeBtn) {
     }
 }
 
-/* ---- Install hint (index only) ---------------------------------------
-   One line at the bottom of the page, in flow. Shown only when the page is
-   not already running standalone; a tap dismisses it permanently. iOS has no
-   install API (Safari lacks beforeinstallprompt), so the most a hint can do
-   there is name the gesture. */
+/* ---- Install hint (index only, phones and tablets only) --------------
+   One line at the bottom of the page, in flow. Shown only on a device that
+   has a home screen to add to, and only when the page is not already running
+   standalone. A tap removes the element outright -- removal, not hiding, so
+   the layout returns to exactly its pre-hint state -- and stores the
+   dismissal for good. iOS has no install API (Safari lacks
+   beforeinstallprompt), so the most a hint can do there is name the
+   gesture. iPadOS reports itself as a Mac, hence the touch-point check. */
 const hint = document.getElementById("install-hint");
 if (hint) {
+    const ua = navigator.userAgent;
+    const ios = /iPhone|iPad|iPod/.test(ua) ||
+        (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    const mobile = ios || /Android/.test(ua);
     const standalone =
         (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
         window.navigator.standalone === true;
     let dismissed = false;
     try { dismissed = localStorage.getItem("prayers-hint") === "dismissed"; } catch (e) {}
-    if (!standalone && !dismissed) {
-        const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    if (mobile && !standalone && !dismissed) {
         hint.textContent = ios
             ? "This book can live on your home screen: tap Share, then Add to Home Screen. (tap to dismiss)"
             : "This book can live on your home screen and reads offline. (tap to dismiss)";
         hint.hidden = false;
         hint.addEventListener("click", () => {
-            hint.hidden = true;
+            hint.remove();
             try { localStorage.setItem("prayers-hint", "dismissed"); } catch (e) {}
         });
+    } else {
+        hint.remove();
     }
 }
 
