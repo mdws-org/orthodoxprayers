@@ -205,12 +205,16 @@ h1 {
     font-weight: 500;
 }
 
-/* In-prose links (rare): quiet ink, rubric on hover, no underline. */
+/* In-prose links are rubrics: red is this book's native mark for "not the
+   text -- attend differently", which is what a link is. Discoverable on
+   touch with no hover, and no underline -- running text is never underlined
+   in a printed book. The register only works while prose links stay RARE
+   (about one per page); link-dense prose should become a list instead. */
 .prayer a {
-    color: var(--ink);
+    color: var(--rubric);
     text-decoration: none;
 }
-.prayer a:hover { color: var(--rubric); }
+.prayer a:hover { opacity: 0.75; }
 
 .finis {
     text-align: center;
