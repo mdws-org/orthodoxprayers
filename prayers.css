@@ -240,8 +240,11 @@ h1 {
 .hint:hover { opacity: 0.75; }
 .hint[hidden] { display: none; }
 
+/* The footer follows the content. margin-top:auto pinned it to the viewport
+   bottom instead, which on a tall window opened a field of blank page
+   between the closing cross and the footer. */
 footer {
-    margin-top: auto;
+    margin-top: 2.6rem;
     text-align: center;
     color: var(--ink-soft);
     font-size: 0.85rem;
