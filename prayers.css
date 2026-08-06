@@ -365,10 +365,8 @@ footer a:hover { color: var(--rubric); }
     margin: 0.7rem 0 1.15rem;
 }
 
-/* Where the printed book leaves a rule for the reader to supply a name. */
-.blank {
-    display: inline-block;
-    width: 5.5em;
-    margin: 0 0.1em;
-    border-bottom: 1px solid var(--ink-soft);
-}
+/* N. (one name) / NN. (several) where the reader supplies a name. Kept in
+   ink, not rubric red: several of these sit directly against a red
+   parenthetical, and in red the two run together into one mark. Italic
+   alone is enough to show it stands in for something. */
+.name { font-style: italic; }
