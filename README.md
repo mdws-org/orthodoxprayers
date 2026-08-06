@@ -12,6 +12,7 @@ Live at https://orthodoxprayers.net
 - Morning Prayer of St. Philaret of Moscow
 - Prayer at Daybreak of Elder Sophrony
 - Short Prayers of the Hours for home use
+- Prayers at the table, before and after each meal
 - The Psalter, in twenty kathismata, with a pointer to the kathisma appointed
   for the current day of the month
 
