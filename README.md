@@ -11,6 +11,7 @@ Live at https://orthodoxprayers.net
 
 - Morning Prayer of St. Philaret of Moscow
 - Prayer at Daybreak of Elder Sophrony
+- The Commemoration of the Living and the Dead, read at the end of the rule
 - Short Prayers of the Hours for home use
 - Prayers at the table, before and after each meal
 - The common prayers of the Usual Beginning, given in full

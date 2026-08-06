@@ -354,3 +354,21 @@ footer a:hover { color: var(--rubric); }
 .prayer.indented p.opening { text-indent: 0; }
 
 .rubric-line { color: var(--rubric); font-style: italic; margin: 1.4rem 0 0.9rem; }
+
+/* The prostration after each petition of the Commemoration. Centered and set
+   tighter than a rubric-line: it recurs eighteen times, and at rubric-line
+   spacing the page would drift apart into a list. */
+.prostration {
+    color: var(--rubric);
+    font-style: italic;
+    text-align: center;
+    margin: 0.7rem 0 1.15rem;
+}
+
+/* Where the printed book leaves a rule for the reader to supply a name. */
+.blank {
+    display: inline-block;
+    width: 5.5em;
+    margin: 0 0.1em;
+    border-bottom: 1px solid var(--ink-soft);
+}
