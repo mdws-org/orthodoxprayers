@@ -10,6 +10,7 @@ const ASSETS = [
     BASE + "morning/daybreak/",
     BASE + "hours/",
     BASE + "table/",
+    BASE + "common/",
     BASE + "psalter/",
     BASE + "psalter/kathisma-1/",
     BASE + "psalter/kathisma-2/",
