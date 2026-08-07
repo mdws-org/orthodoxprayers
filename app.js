@@ -171,6 +171,15 @@ function fitDropCap() {
 // every visitor sees the same bar on a given day, pages differ from each
 // other, and the ornament turns over at midnight. The static src in the HTML
 // is the no-JS fallback.
+//
+// The seed is the reader's LOCAL calendar date, not a UTC instant. Dividing
+// Date.now() by a day rolled the bar over at 00:00 UTC, which is late
+// afternoon in Arizona, so the ornament changed partway through the day and
+// the "turns over at midnight" promise above held only for readers on UTC.
+// Passing the local Y/M/D through Date.UTC keeps both properties: two readers
+// on the same calendar date get the same bar whatever their time zone, and the
+// change lands at their own midnight. Date.UTC also sidesteps DST, because it
+// reads calendar fields instead of arithmetic on a clock offset.
 const BARS = [
     ["bar2", 2816, 477],
     ["bar8", 2741, 418],
@@ -181,7 +190,10 @@ const BARS = [
 ];
 const masthead = document.querySelector(".ornament[data-rotate]");
 if (masthead) {
-    const day = Math.floor(Date.now() / 864e5);
+    const now = new Date();
+    const day = Math.floor(
+        Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5
+    );
     const offset = parseInt(masthead.dataset.rotate, 10) || 0;
     const [name, w, h] = BARS[(day + offset) % BARS.length];
     masthead.src = "/art/bars/" + name + ".svg";
