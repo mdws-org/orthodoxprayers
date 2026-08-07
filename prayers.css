@@ -294,10 +294,14 @@ footer div { margin-top: 0.35rem; }
 footer a { color: inherit; text-decoration: none; }
 footer a:hover { color: var(--rubric); }
 
+/* A phone is read at the same distance as a desktop, so the text must not
+   shrink with the page -- if anything it runs a hair larger. Only the
+   heading scales down. Hyphenation (set on .prayer p) is what lets the
+   justified setting survive the ~36-character measure this leaves. */
 @media (max-width: 600px) {
-    main.page { padding: 1.9rem 1.1rem 1.8rem; }
+    main.page { padding: 1.9rem 1.5rem 1.8rem; }
     h1 { font-size: 1.6rem; }
-    .prayer p { font-size: 1.07rem; }
+    .prayer p { font-size: 1.2rem; }
     .ornament { margin-bottom: 1.6rem; }
 }
 
