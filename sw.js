@@ -7,6 +7,7 @@ const ASSETS = [
     BASE,
     BASE + "about/",
     BASE + "morning/",
+    BASE + "morning/rule/",
     BASE + "morning/daybreak/",
     BASE + "commemorations/",
     BASE + "hours/",
