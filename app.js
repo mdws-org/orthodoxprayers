@@ -192,6 +192,22 @@ if (todayLine) {
     }
 }
 
+/* ---- 404: a spot icon dealt at random ------------------------------- */
+// Only the 404 page has a .wink. Unlike the masthead, this one is random on
+// purpose: the ornament is appointed to the day like the printed books, but
+// an error page may smile. The icons are small OIP spot pieces, fetched one
+// per view and never precached -- an offline 404 simply goes without.
+const wink = document.querySelector(".wink");
+if (wink) {
+    const ICONS = [
+        "byzantine-cross-1", "byzantine-cross-2", "byzantine-cross-3",
+        "byzantine-cross-4", "byzantine-cross-5", "cross-and-dots",
+        "cross-in-square-thin", "golgotha-cross", "jerusalem-cross",
+        "seraph", "star-1", "star-2", "three-bar-cross", "two-bar-cross"
+    ];
+    wink.src = "/art/icons/" + ICONS[Math.floor(Math.random() * ICONS.length)] + ".svg";
+}
+
 /* ---- PWA ------------------------------------------------------------- */
 if ("serviceWorker" in navigator) {
     // Absolute path: this module is loaded from subpages too, and a relative
