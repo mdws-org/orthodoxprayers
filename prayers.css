@@ -142,9 +142,21 @@ main.page {
        no JavaScript is shown. */
     aspect-ratio: var(--bar-ar, 2243 / 479);
 }
-:root[data-theme="night"] .ornament { filter: invert(0.9); }
+
+/* The 404's spot icon. app.js deals one at random from art/icons/ on every
+   load -- the masthead is appointed to the day like the printed books, but an
+   error page may smile. Height is fixed so the box cannot shift when the
+   image lands; the icons are all portrait-or-square so width follows. */
+.wink {
+    display: block;
+    height: 5.5rem;
+    width: auto;
+    margin: 2.4rem auto 0;
+    opacity: 0.92;
+}
+:root[data-theme="night"] :is(.ornament, .wink) { filter: invert(0.9); }
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="day"]) .ornament { filter: invert(0.9); }
+    :root:not([data-theme="day"]) :is(.ornament, .wink) { filter: invert(0.9); }
 }
 
 .section-label {
