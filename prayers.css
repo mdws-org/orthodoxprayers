@@ -149,9 +149,9 @@ main.page {
    image lands; the icons are all portrait-or-square so width follows. */
 .wink {
     display: block;
-    height: 5.5rem;
+    height: min(9rem, 34vw);
     width: auto;
-    margin: 2.4rem auto 0;
+    margin: 2.6rem auto 0;
     opacity: 0.92;
 }
 :root[data-theme="night"] :is(.ornament, .wink) { filter: invert(0.9); }
