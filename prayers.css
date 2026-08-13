@@ -147,10 +147,15 @@ main.page {
    load -- the masthead is appointed to the day like the printed books, but an
    error page may smile. Height is fixed so the box cannot shift when the
    image lands; the icons are all portrait-or-square so width follows. */
+/* Every deal gets the same em-box, like the plates of the printed books:
+   tall pieces cap by height, wide ones by width, so a narrow three-bar cross
+   and a near-square star carry the same visual mass. contain keeps the
+   drawing undistorted inside the square. */
 .wink {
     display: block;
     height: min(9rem, 34vw);
-    width: auto;
+    width: min(9rem, 34vw);
+    object-fit: contain;
     margin: 2.6rem auto 0;
     opacity: 0.92;
 }
