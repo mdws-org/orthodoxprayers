@@ -1,0 +1,14 @@
+# Fails the build when sw.js's hand-maintained precache list and the page
+# tree disagree, in either direction. Without this, a page added without a
+# matching ASSETS entry works online and silently fails offline.
+name: precache
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/check_precache.py
