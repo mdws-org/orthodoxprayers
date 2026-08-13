@@ -136,6 +136,11 @@ main.page {
     height: auto;
     margin: 0 auto 2.2rem;
     opacity: 0.92;
+    /* theme.js sets --bar-ar to the chosen bar's ratio before first paint, so
+       the box is the right shape from the start and nothing shifts when the
+       image lands. The fallback ratio is bar19's, which is what a reader with
+       no JavaScript is shown. */
+    aspect-ratio: var(--bar-ar, 2243 / 479);
 }
 :root[data-theme="night"] .ornament { filter: invert(0.9); }
 @media (prefers-color-scheme: dark) {

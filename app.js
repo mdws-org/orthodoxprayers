@@ -166,39 +166,13 @@ function fitDropCap() {
 }
 
 /* ---- Masthead: daily-rotating ornament bar ---------------------------- */
-// A small curated subset of Orthodox Illustration Project bars. The pick is
-// seeded by the calendar day (plus a per-page offset from data-rotate), so
-// every visitor sees the same bar on a given day, pages differ from each
-// other, and the ornament turns over at midnight. The static src in the HTML
-// is the no-JS fallback.
-//
-// The seed is the reader's LOCAL calendar date, not a UTC instant. Dividing
-// Date.now() by a day rolled the bar over at 00:00 UTC, which is late
-// afternoon in Arizona, so the ornament changed partway through the day and
-// the "turns over at midnight" promise above held only for readers on UTC.
-// Passing the local Y/M/D through Date.UTC keeps both properties: two readers
-// on the same calendar date get the same bar whatever their time zone, and the
-// change lands at their own midnight. Date.UTC also sidesteps DST, because it
-// reads calendar fields instead of arithmetic on a clock offset.
-const BARS = [
-    ["bar2", 2816, 477],
-    ["bar8", 2741, 418],
-    ["bar12", 4371, 718],
-    ["bar13", 5087, 647],
-    ["bar19", 2243, 479],
-    ["bar20", 2556, 565],
-];
-const masthead = document.querySelector(".ornament[data-rotate]");
+// theme.js chose the bar in the <head>, before the parser reached this
+// element, and preloaded it -- see the long note there for why the choice
+// cannot live down here. All that is left is to point the element at it.
+const masthead = document.querySelector(".ornament");
 if (masthead) {
-    const now = new Date();
-    const day = Math.floor(
-        Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5
-    );
-    const offset = parseInt(masthead.dataset.rotate, 10) || 0;
-    const [name, w, h] = BARS[(day + offset) % BARS.length];
-    masthead.src = "/art/bars/" + name + ".svg";
-    masthead.width = w;
-    masthead.height = h;
+    const bar = document.documentElement.dataset.bar;
+    if (bar) masthead.src = "/art/bars/" + bar + ".svg";
 }
 
 /* ---- Psalter: today's kathisma --------------------------------------- */
