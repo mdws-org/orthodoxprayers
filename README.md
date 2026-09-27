@@ -18,6 +18,9 @@ Live at https://orthodoxprayers.net
 - The whole evening rule, the order of prayers before sleep
 - The Evening Prayer of St. Macarius the Great, and the prayer of
   St. John of Damascus before sleep
+- The Order of Compline, with the troparia for each evening of the week
+- The Three Canons: of Repentance, to the Theotokos, and to the Guardian
+  Angel
 - The Canon and Prayers in Preparation for Holy Communion, and the Prayers
   of Thanksgiving after it
 - The Psalter, in twenty kathismata, with a pointer to the kathisma appointed

@@ -237,6 +237,13 @@ h1 {
     text-decoration: none;
 }
 .prayer a:hover { opacity: 0.75; }
+/* Inside a rubric the text is already red, so a link there would not show;
+   there alone it takes a hairline underline. */
+.prayer .rubric-line a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+}
 
 .finis {
     text-align: center;
@@ -394,6 +401,18 @@ footer a:hover { color: var(--rubric); }
     text-indent: -1.5em;
 }
 .prayer .verse p.in { padding-left: 3em; }
+
+/* The Three Canons are read ode by ode, all three within each ode: each
+   canon's name heads its troparia, one step below the ode's head. */
+.canon-head {
+    text-align: center;
+    color: var(--rubric);
+    font-variant: small-caps;
+    font-weight: 400;
+    font-size: 1.05rem;
+    letter-spacing: 0.12em;
+    margin: 1.6rem 0 0.6rem;
+}
 
 .rubric-line { color: var(--rubric); font-style: italic; margin: 1.4rem 0 0.9rem; }
 
