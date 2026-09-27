@@ -18,6 +18,8 @@ Live at https://orthodoxprayers.net
 - The whole evening rule, the order of prayers before sleep
 - The Evening Prayer of St. Macarius the Great, and the prayer of
   St. John of Damascus before sleep
+- The Canon and Prayers in Preparation for Holy Communion, and the Prayers
+  of Thanksgiving after it
 - The Psalter, in twenty kathismata, with a pointer to the kathisma appointed
   for the current day of the month
 
