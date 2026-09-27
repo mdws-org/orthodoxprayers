@@ -237,6 +237,13 @@ h1 {
     text-decoration: none;
 }
 .prayer a:hover { opacity: 0.75; }
+/* Inside a rubric the text is already red, so a link there would not show;
+   there alone it takes a hairline underline. */
+.prayer .rubric-line a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+}
 
 .finis {
     text-align: center;
