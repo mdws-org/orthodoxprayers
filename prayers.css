@@ -199,9 +199,6 @@ h1 {
     hyphens: auto;
     margin-bottom: 1.15em;
 }
-/* Drop cap. CSS float is the no-JS baseline; app.js refines --cap-size and
-   --cap-pad with measured font metrics (via Pretext) so the cap spans whole
-   lines exactly in whatever font actually loaded. */
 /* Small red cross above the section title, as the printed books head their
    pages. */
 .head-cross {
@@ -220,10 +217,10 @@ h1 {
 
 .prayer p.opening::first-letter {
     color: var(--rubric);
-    font-size: var(--cap-size, 3.4em);
+    font-size: 3.4em;
     float: left;
     line-height: 0.82;
-    padding: var(--cap-pad, 0.06em 0.12em 0 0);
+    padding: 0.06em 0.12em 0 0;
     font-weight: 500;
 }
 
@@ -236,12 +233,18 @@ h1 {
     color: var(--rubric);
     text-decoration: none;
 }
-.prayer a:hover { opacity: 0.75; }
 /* Inside a rubric the text is already red, so a link there would not show;
    there alone it takes a hairline underline. */
 .prayer .rubric-line a {
     text-decoration: underline;
     text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+}
+/* Hover marks a link with a heavier underline, not by dimming it: the night
+   red at reduced opacity drops below the 4.5:1 contrast minimum for text. */
+.prayer a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
     text-underline-offset: 0.18em;
 }
 
@@ -388,6 +391,9 @@ footer a:hover { color: var(--rubric); }
 /* An indented run inside a spaced prayer (Chrysostom's petitions): its own
    lines sit tight, but the block keeps the paragraph gap after it. */
 .prayer .prayer.indented { margin-bottom: 1.15em; }
+/* The petitions are short lines, set ragged right: justified, a petition
+   just short of the measure would stretch its word spaces across it. */
+.prayer .prayer.indented p { text-align: left; hyphens: manual; }
 
 /* Verse the source sets line by line (St. Simeon's prayer, the verses said
    before Communion): ragged right, a hanging indent where a line wraps, and

@@ -17,9 +17,6 @@
 /hours/
   Cache-Control: public, max-age=0, must-revalidate
 
-/psalter/
-  Cache-Control: public, max-age=0, must-revalidate
-
 /psalter/*
   Cache-Control: public, max-age=0, must-revalidate
 
@@ -28,9 +25,6 @@
 
 /art/*
   Cache-Control: public, max-age=604800
-
-/vendor/*
-  Cache-Control: public, max-age=86400
 
 /icon-192.png
   Cache-Control: public, max-age=3600
