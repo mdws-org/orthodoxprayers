@@ -45,7 +45,6 @@ const ASSETS = [
     BASE + "prayers.css",
     BASE + "theme.js",
     BASE + "app.js",
-    BASE + "vendor/pretext.js",
     BASE + "fonts/ebgaramond-var.woff2",
     BASE + "fonts/ebgaramond-italic-var.woff2",
     BASE + "art/bars/bar2.svg",

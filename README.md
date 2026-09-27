@@ -46,13 +46,11 @@ and the web app manifest do not load from `file://` URLs.
 synchronously in the document head, so the page must never flash the wrong
 theme.
 
-`app.js` handles theme cycling, drop-cap sizing, ornament rotation, and service
-worker registration.
+`app.js` handles theme cycling, the small-caps run-in after each drop cap,
+ornament rotation, and service worker registration.
 
 `sw.js` caches the site for offline use. Raise `VERSION` after you change any
 cached file, or returning visitors keep the old copy.
-
-`vendor/pretext.js` is the typesetting helper that sizes drop caps.
 
 `art/bars/` holds the ornament bars. The site picks one per day from the date.
 
