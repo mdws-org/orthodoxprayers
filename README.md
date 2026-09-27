@@ -15,6 +15,7 @@ Live at https://orthodoxprayers.net
 - Short Prayers of the Hours for home use
 - Prayers at the table, before and after each meal
 - The common prayers of the Usual Beginning, given in full
+- The whole evening rule, the order of prayers before sleep
 - The Evening Prayer of St. Macarius the Great, and the prayer of
   St. John of Damascus before sleep
 - The Psalter, in twenty kathismata, with a pointer to the kathisma appointed
