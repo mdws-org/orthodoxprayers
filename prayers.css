@@ -382,6 +382,19 @@ footer a:hover { color: var(--rubric); }
    lines sit tight, but the block keeps the paragraph gap after it. */
 .prayer .prayer.indented { margin-bottom: 1.15em; }
 
+/* Verse the source sets line by line (St. Simeon's prayer, the verses said
+   before Communion): ragged right, a hanging indent where a line wraps, and
+   a deeper start for the second line of a couplet. */
+.prayer .verse { margin-bottom: 1.15em; }
+.prayer .verse p {
+    margin: 0;
+    text-align: left;
+    hyphens: manual;
+    padding-left: 1.5em;
+    text-indent: -1.5em;
+}
+.prayer .verse p.in { padding-left: 3em; }
+
 .rubric-line { color: var(--rubric); font-style: italic; margin: 1.4rem 0 0.9rem; }
 
 /* The prostration after each petition of the Commemoration. Centered and set
