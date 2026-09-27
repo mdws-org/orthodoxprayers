@@ -1,6 +1,10 @@
 # Fails the build when sw.js's hand-maintained precache list and the page
 # tree disagree, in either direction. Without this, a page added without a
 # matching ASSETS entry works online and silently fails offline.
+#
+# Also fails it when a page set from the prayer book stops matching the book
+# word for word (outside the edits each check lists), or when a glossary note
+# and its button come apart.
 name: precache
 on:
   push:
@@ -12,3 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 scripts/check_precache.py
+      - run: python3 scripts/check_text_evening.py
+      - run: python3 scripts/check_text_communion.py
+      - run: python3 scripts/check_text_compline_canons.py
+      - run: python3 scripts/check_glossary.py
