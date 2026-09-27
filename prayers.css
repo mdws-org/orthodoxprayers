@@ -233,9 +233,10 @@ h1 {
     color: var(--rubric);
     text-decoration: none;
 }
-/* Inside a rubric the text is already red, so a link there would not show;
-   there alone it takes a hairline underline. */
-.prayer .rubric-line a {
+/* Inside a rubric or label the text is already red, so a link there would
+   not show; there alone it takes a hairline underline. */
+.prayer .rubric-line a,
+.prayer .inscription a {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.18em;
@@ -460,6 +461,15 @@ button.gloss {
     letter-spacing: 0.12em;
     margin: 1.6rem 0 0.6rem;
 }
+/* Compline's Saturday troparia go by the tone of the week: one line of
+   links to the eight, under the rubric that says so. */
+.tone-jump { letter-spacing: 0.08em; }
+.tone-jump a { padding: 0 0.2em; }
+
+/* The refrain said before each troparion of a canon, and the doxology
+   before its last: said, so in ink, but italic and drawn close to the
+   troparion it introduces, so the eye can find its place in a long ode. */
+.prayer p.refrain { font-style: italic; margin-bottom: 0.3em; }
 
 .rubric-line { color: var(--rubric); font-style: italic; margin: 1.4rem 0 0.9rem; }
 
