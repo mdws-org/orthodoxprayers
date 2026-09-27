@@ -233,9 +233,10 @@ h1 {
     color: var(--rubric);
     text-decoration: none;
 }
-/* Inside a rubric the text is already red, so a link there would not show;
-   there alone it takes a hairline underline. */
-.prayer .rubric-line a {
+/* Inside a rubric or label the text is already red, so a link there would
+   not show; there alone it takes a hairline underline. */
+.prayer .rubric-line a,
+.prayer .inscription a {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.18em;
@@ -257,6 +258,10 @@ h1 {
 
 /* Index (table of contents) */
 .toc { list-style: none; margin-top: 0.4rem; }
+/* The contents are grouped by the hour of use; each group is named in the
+   red label the pages set above their titles. */
+.toc-head { font-weight: normal; margin: 2.4rem 0 1rem; }
+.rule + .toc-head { margin-top: 0; }
 .toc li { margin-bottom: 0.9rem; text-align: center; }
 .toc a {
     color: var(--ink);
@@ -408,6 +413,43 @@ footer a:hover { color: var(--rubric); }
 }
 .prayer .verse p.in { padding-left: 3em; }
 
+/* A liturgical term in a rubric or label opens a short note: a native
+   popover, no script, laid along the bottom of the screen and dismissed by
+   a tap anywhere else. Only rubrics and labels carry them, never the
+   prayers, so the text to be said stays unbroken. */
+button.gloss {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+}
+.gloss-note {
+    position: fixed;
+    inset: auto 0 0 0;
+    margin: 0 auto;
+    max-width: 34rem;
+    padding: 1.1rem 1.4rem max(1.4rem, env(safe-area-inset-bottom));
+    background: var(--bg);
+    color: var(--ink);
+    border: 0;
+    border-top: 1px solid var(--rubric);
+    font-size: 1.05rem;
+    line-height: 1.55;
+}
+.gloss-note::backdrop { background: rgb(0 0 0 / 0.3); }
+.gloss-note dfn {
+    color: var(--rubric);
+    font-style: normal;
+    font-variant: small-caps;
+    letter-spacing: 0.06em;
+    margin-right: 0.3em;
+}
+
 /* The Three Canons are read ode by ode, all three within each ode: each
    canon's name heads its troparia, one step below the ode's head. */
 .canon-head {
@@ -419,6 +461,15 @@ footer a:hover { color: var(--rubric); }
     letter-spacing: 0.12em;
     margin: 1.6rem 0 0.6rem;
 }
+/* Compline's Saturday troparia go by the tone of the week: one line of
+   links to the eight, under the rubric that says so. */
+.tone-jump { letter-spacing: 0.08em; }
+.tone-jump a { padding: 0 0.2em; }
+
+/* The refrain said before each troparion of a canon, and the doxology
+   before its last: said, so in ink, but italic and drawn close to the
+   troparion it introduces, so the eye can find its place in a long ode. */
+.prayer p.refrain { font-style: italic; margin-bottom: 0.3em; }
 
 .rubric-line { color: var(--rubric); font-style: italic; margin: 1.4rem 0 0.9rem; }
 
