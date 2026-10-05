@@ -52,7 +52,7 @@ ornament rotation, and service worker registration.
 `sw.js` caches the site for offline use. Raise `VERSION` after you change any
 cached file, or returning visitors keep the old copy.
 
-`scripts/build_pages.py` rebuilds the pages set from the prayer book (the evening rule, the Communion pages, Compline and the Three Canons) from `scripts/pg34981.txt`, then adds the glossary notes and the Communion page links. Edit those pages through the scripts, not by hand, or the next rebuild overwrites the edit. After a rebuild, run the `scripts/check_*.py` checks, which CI also runs, and raise `VERSION` in `sw.js`.
+`scripts/build_pages.py` rebuilds the pages set from the prayer book (the evening rule, the Communion pages, Compline and the Three Canons) from `scripts/pg34981.txt`, and the Typika from `scripts/obednitsa.txt` and `scripts/hapgood.txt`, then adds the glossary notes and the Communion page links. Edit those pages through the scripts, not by hand, or the next rebuild overwrites the edit. After a rebuild, run the `scripts/check_*.py` checks, which CI also runs, and raise `VERSION` in `sw.js`.
 
 `art/bars/` holds the ornament bars. The site picks one per day from the date.
 
@@ -70,6 +70,13 @@ edge. Cloudflare caches 404 responses for paths that did not exist before the
 deploy, and those cached misses outlive the deploy itself.
 
 ## Texts and art
+
+The Typika is set from a printed booklet, "Obednitsa: The Reader's Service",
+undated and published without a copyright notice before 1978, transcribed in
+`scripts/obednitsa.txt`. Its Beatitudes and Psalm 33 follow the Revised
+Standard Version, still in copyright, and the page sets those two passages
+from Isabel Hapgood's Service Book of the Holy Orthodox-Catholic Apostolic
+Church (1906), public domain, in `scripts/hapgood.txt`.
 
 The Psalter of St Seraphim Orthodox Cathedral, Dallas, Texas (Orthodox Church
 in America); portions translated by +DMITRI, Archbishop of Dallas and the

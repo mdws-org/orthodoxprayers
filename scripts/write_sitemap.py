@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 WT = Path(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else Path(__file__).resolve().parent.parent
-ORDER = ["", "morning/rule/", "morning/", "morning/daybreak/", "commemorations/", "hours/", "table/",
+ORDER = ["", "morning/rule/", "morning/", "morning/daybreak/", "commemorations/", "hours/", "typika/", "table/",
          "common/", "compline/", "evening/rule/", "evening/", "evening/sleep/",
          "canons/", "communion/canon/", "communion/", "communion/thanksgiving/", "psalter/"]
 ORDER += [f"psalter/kathisma-{n}/" for n in range(1, 21)] + ["about/"]

@@ -19,4 +19,5 @@ jobs:
       - run: python3 scripts/check_text_evening.py
       - run: python3 scripts/check_text_communion.py
       - run: python3 scripts/check_text_compline_canons.py
+      - run: python3 scripts/check_text_typika.py
       - run: python3 scripts/check_glossary.py

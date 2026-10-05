@@ -400,6 +400,12 @@ footer a:hover { color: var(--rubric); }
    just short of the measure would stretch its word spaces across it. */
 .prayer .prayer.indented p { text-align: left; hyphens: manual; }
 
+/* Who says each part of a service set for reader and choir (the Typika):
+   small caps in rubric red, so the words to be said stay in ink. Inline at
+   the head of a paragraph; a line of its own above a sung text. */
+.prayer .speaker { font-variant: small-caps; color: var(--rubric); letter-spacing: 0.06em; }
+.prayer div.speaker { margin-bottom: 0.35em; }
+
 /* Verse the source sets line by line (St. Simeon's prayer, the verses said
    before Communion): ragged right, a hanging indent where a line wraps, and
    a deeper start for the second line of a couplet. */

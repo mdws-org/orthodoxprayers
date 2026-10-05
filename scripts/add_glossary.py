@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Add tap-to-read notes for liturgical terms in rubrics and labels.
 
-Each term found in a .rubric-line or .inscription becomes a <button
-popovertarget> that opens a native popover holding the note; no script.
-Labels (.inscription) get a button at every occurrence; rubrics only at the
-first occurrence of each term on a page. Text inside links and inside the
+Each term found in a .rubric-line, an .inscription or a .psalm-head becomes
+a <button popovertarget> that opens a native popover holding the note; no
+script. Labels and heads get a button at every occurrence; rubrics only at
+the first occurrence of each term on a page. Text inside links and inside the
 prayers themselves is never touched. A page that already carries notes keeps
 its buttons and has its notes rewritten from GLOSS, so an edit here reaches
 every page on the next run.
@@ -43,8 +43,22 @@ GLOSS = {
                     "The priest’s closing words after the Lord’s Prayer: “For Thine is the Kingdom, and the power, and the glory…” Without a priest, go on to what follows."),
     "kathisma": (r"\bkathisma\b", "Kathisma",
                  "One of the twenty sections of the Psalter, read in turn. The word means “sitting.”"),
+    "obednitsa": (r"\bObednitsa\b", "Obednitsa",
+                  "The Russian name for the Typika, the Reader’s Service: read when the Divine Liturgy is not served, as when there is no priest. It keeps the Liturgy’s shape, the antiphons, the readings, the Creed and the Lord’s Prayer, without the Eucharist."),
+    "antiphon": (r"\bAntiphon\b", "Antiphon",
+                 "A psalm or hymn sung in alternation, verse by verse, between two choirs or reader and choir. The three of the Typika are Psalms 102 and 145 and the Beatitudes; the Liturgy has them on Sundays, and other antiphons on other days."),
+    "trisagion": (r"\bTrisagion\b", "Trisagion",
+                  "The thrice-holy hymn: “Holy God, Holy Mighty, Holy Immortal, have mercy on us.” The Trisagion Prayers are this hymn and the prayers that follow it, through the Lord’s Prayer, which open many services; at the Liturgy and the Typika the hymn is sung before the readings."),
+    "prokeimenon": (r"\b(?:Prokeimenon|PROKEIMENON)\b", "Prokeimenon",
+                    "A psalm verse sung as a refrain before the Epistle: the choir sings it, the reader chants a verse, and the choir sings it again. Its words and tone change with the day."),
+    "zadostoynik": (r"\bZadostoynik\b", "Zadostoynik",
+                    "The hymn to the Theotokos sung in place of “It is truly meet” on a great feast; the name means “instead of It is truly meet.” Service books also use it, as here, for the hymn in that place, which on an ordinary day is “It is truly meet” itself."),
+    "theotokion": (r"\bTheotokion\b", "Theotokion",
+                   "A hymn to the Theotokos (plural theotokia), most often sung to close a group of hymns, as here after the kontakia."),
+    "analoy": (r"\bAnaloy\b", "Analoy",
+               "A stand with a sloped top that holds an icon or the Gospel book for veneration and reading. The Greek name is analogion."),
 }
-BLOCK = re.compile(r'(<div class="(inscription|rubric-line)"[^>]*>)(.*?)(</div>)')
+BLOCK = re.compile(r'(<(?:div|h2) class="(inscription|rubric-line|psalm-head)"[^>]*>)(.*?)(</(?:div|h2)>)')
 NOTE = re.compile(r'<div id="g-([a-z]+)" class="gloss-note" popover>.*?</div>')
 
 
@@ -93,7 +107,7 @@ def process(page):
     used = set()
 
     def block(m):
-        return m.group(1) + wrap_text(m.group(3), m.group(2) == "inscription", used) + m.group(4)
+        return m.group(1) + wrap_text(m.group(3), m.group(2) != "rubric-line", used) + m.group(4)
 
     text = BLOCK.sub(block, text)
     if not used:
