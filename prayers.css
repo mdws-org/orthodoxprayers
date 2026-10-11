@@ -90,7 +90,7 @@ header span {
 }
 header span { cursor: default; }
 header a { text-align: left; }
-header a:hover { color: var(--rubric); }
+header a:active { color: var(--rubric); }
 /* The label is set in CSS, not markup, so it is correct before first paint
    and with JS off. It names the mode a tap switches TO, and mirrors the
    palette resolution above exactly: explicit data-theme wins, otherwise the
@@ -111,7 +111,7 @@ header a:hover { color: var(--rubric); }
     flex: 1;
     text-align: right;
 }
-#theme:hover { color: var(--rubric); }
+#theme:active { color: var(--rubric); }
 #theme::before { content: "Night"; }
 :root[data-theme="night"] #theme::before { content: "Day"; }
 @media (prefers-color-scheme: dark) {
@@ -241,9 +241,10 @@ h1 {
     text-decoration-thickness: 1px;
     text-underline-offset: 0.18em;
 }
-/* Hover marks a link with a heavier underline, not by dimming it: the night
-   red at reduced opacity drops below the 4.5:1 contrast minimum for text. */
-.prayer a:hover {
+/* Hover and press mark a link with a heavier underline, not by dimming it:
+   the night red at reduced opacity drops below the 4.5:1 contrast minimum
+   for text. The hover rule is in the hover block at the end of the file. */
+.prayer a:active {
     text-decoration: underline;
     text-decoration-thickness: 2px;
     text-underline-offset: 0.18em;
@@ -269,7 +270,7 @@ h1 {
     font-size: 1.25rem;
     border-bottom: 1px solid var(--rule);
 }
-.toc a:hover { color: var(--rubric); border-color: var(--rubric); }
+.toc a:active { color: var(--rubric); border-color: var(--rubric); }
 .toc .who {
     display: block;
     color: var(--ink-soft);
@@ -314,7 +315,7 @@ h1 {
     font-size: 0.8rem;
     margin-top: 0.15rem;
 }
-.hint:hover { opacity: 0.75; }
+.hint:active { opacity: 0.75; }
 .hint[hidden] { display: none; }
 
 /* The footer follows the content. margin-top:auto pinned it to the viewport
@@ -329,7 +330,7 @@ footer {
 }
 footer div { margin-top: 0.35rem; }
 footer a { color: inherit; text-decoration: none; }
-footer a:hover { color: var(--rubric); }
+footer a:active { color: var(--rubric); }
 
 /* A phone is read at the same distance as a desktop, so the text must not
    shrink with the page -- if anything it runs a hair larger. Only the
@@ -376,7 +377,7 @@ footer a:hover { color: var(--rubric); }
     letter-spacing: 0.08em;
 }
 .knav a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px solid var(--rule); }
-.knav a:hover { color: var(--rubric); border-color: var(--rubric); }
+.knav a:active { color: var(--rubric); border-color: var(--rubric); }
 .today-line {
     text-align: center;
     color: var(--ink);
@@ -468,9 +469,16 @@ button.gloss {
     margin: 1.6rem 0 0.6rem;
 }
 /* Compline's Saturday troparia go by the tone of the week: one line of
-   links to the eight, under the rubric that says so. */
+   links to the eight, under the rubric that says so. Each digit keeps its
+   size on the page and takes a 44px-tall tap box that reaches halfway to
+   its neighbours, so the boxes meet without overlapping. */
 .tone-jump { letter-spacing: 0.08em; }
-.tone-jump a { padding: 0 0.2em; }
+.tone-jump a { padding: 0 0.2em; position: relative; }
+.tone-jump a::after {
+    content: "";
+    position: absolute;
+    inset: min(0px, (100% - 44px) / 2) -0.3em;
+}
 
 /* The refrain said before each troparion of a canon, and the doxology
    before its last: said, so in ink, but italic and drawn close to the
@@ -494,3 +502,36 @@ button.gloss {
    parenthetical, and in red the two run together into one mark. Italic
    alone is enough to show it stands in for something. */
 .name { font-style: italic; }
+
+/* Small links and the theme button keep their size on the page but take a
+   44px tap area: an empty box laid over each, as wide and as tall as the
+   link where it is already larger, and centered on it where it is not. */
+header a,
+#theme,
+footer a,
+.knav a { position: relative; }
+header a::after,
+#theme::after,
+footer a::after,
+.knav a::after {
+    content: "";
+    position: absolute;
+    inset: min(0px, (100% - 44px) / 2);
+}
+
+/* Hover only where a pointer can hover: on a touch screen a tap would leave
+   the hover color stuck. Each rule has an :active twin beside its element,
+   so a tap shows the same mark while the finger is down. */
+@media (hover: hover) and (pointer: fine) {
+    header a:hover { color: var(--rubric); }
+    #theme:hover { color: var(--rubric); }
+    .prayer a:hover {
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 0.18em;
+    }
+    .toc a:hover { color: var(--rubric); border-color: var(--rubric); }
+    .hint:hover { opacity: 0.75; }
+    footer a:hover { color: var(--rubric); }
+    .knav a:hover { color: var(--rubric); border-color: var(--rubric); }
+}
