@@ -1,7 +1,7 @@
 // Offline shell for /. Precache everything fixed;
 // cache-first with network fallback. Bump VERSION on any asset change —
 // tbm releases are deliberate, so a manual version string is fine.
-const VERSION = "prayers-v44";
+const VERSION = "prayers-v45";
 const BASE = "/";
 const ASSETS = [
     BASE,
@@ -59,9 +59,24 @@ const ASSETS = [
     BASE + "icon-512.png",
 ];
 
+// Each file is fetched past the browser's HTTP cache (cache: "reload") and
+// with the version in its query, which no edge copy from before this deploy
+// can match, then stored under its plain address. Fonts are cached as
+// immutable for a year, so a plain fetch could install last version's file.
+function fresh(path) {
+    const url = new URL(path, self.location);
+    url.searchParams.set("v", VERSION);
+    return fetch(new Request(url, { cache: "reload" })).then((r) => {
+        if (!r.ok) throw new Error(path + " answered " + r.status);
+        return r;
+    });
+}
+
 self.addEventListener("install", (e) => {
     e.waitUntil(
-        caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting())
+        caches.open(VERSION).then((c) =>
+            Promise.all(ASSETS.map((path) => fresh(path).then((r) => c.put(path, r))))
+        ).then(() => self.skipWaiting())
     );
 });
 

@@ -65,9 +65,13 @@ external file.
 Cloudflare Pages builds from `main`. There is no build command, and the output
 directory is the repository root.
 
-If a change does not appear after a deploy, purge the changed paths at the
-edge. Cloudflare caches 404 responses for paths that did not exist before the
-deploy, and those cached misses outlive the deploy itself.
+If a change does not appear after a deploy, check that `VERSION` in `sw.js`
+was raised, then purge the changed paths at the edge. Missing paths answer 404
+with `Cache-Control: no-store` (checked 2026-10-18), so the edge does not keep a
+404 past a deploy. On a version bump the service worker fetches every precached
+file with the version in its query and the browser cache skipped, so it installs
+this deploy's files even where a browser or the edge holds an older copy.
+`scripts/check_sw_install.mjs` checks that in CI.
 
 ## Texts and art
 
