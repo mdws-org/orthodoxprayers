@@ -5,6 +5,9 @@
 # Also fails it when a page set from the prayer book stops matching the book
 # word for word (outside the edits each check lists), or when a glossary note
 # and its button come apart.
+#
+# And when the service worker's install step can take a file from before the
+# current deploy (the browser's HTTP cache or an edge copy).
 name: precache
 on:
   push:
@@ -16,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 scripts/check_precache.py
+      - run: node scripts/check_sw_install.mjs
       - run: python3 scripts/check_text_evening.py
       - run: python3 scripts/check_text_communion.py
       - run: python3 scripts/check_text_compline_canons.py
