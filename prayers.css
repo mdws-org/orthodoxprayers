@@ -545,7 +545,9 @@ footer a::after,
    buttons sit inside rubric text, so they print as plain words, and links
    print in the color of the words around them, with no URL after. Each
    prayer, verse group and refrain stays on one page where it fits, and no
-   heading or label is left at the foot of a page. */
+   heading or label is left at the foot of a page. Side margins hold a
+   line to about 72 characters, and each page carries its number at the
+   foot. */
 @media print {
     :root:not([data-theme]),
     :root[data-theme] {
@@ -555,12 +557,20 @@ footer a::after,
         --rubric: #8f1f1f;
         --rule: #999;
     }
-    @page { margin: 18mm 20mm; }
+    @page {
+        margin: 16mm 44mm 18mm;
+        @bottom-center {
+            content: counter(page);
+            font-family: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+            font-size: 9pt;
+            color: #000;
+        }
+    }
     body {
         background: none;
         color: #000;
         font-family: var(--serif);
-        font-size: 12pt;
+        font-size: 13pt;
         line-height: 1.4;
         display: block;
         min-height: 0;
@@ -578,22 +588,22 @@ footer a::after,
     :root[data-theme] :is(.ornament, .wink) { filter: none; opacity: 1; }
     .ornament { margin-bottom: 14pt; }
 
-    h1 { font-size: 20pt; }
-    .section-label { font-size: 8.5pt; }
-    .attribution { font-size: 12pt; margin-bottom: 14pt; }
+    h1 { font-size: 22pt; }
+    .section-label { font-size: 9pt; }
+    .attribution { font-size: 13pt; margin-bottom: 14pt; }
     .rule { margin-bottom: 16pt; }
-    .head-cross { font-size: 11pt; }
-    .prayer p { font-size: 12pt; margin-bottom: 7pt; }
-    .psalm-head { font-size: 13pt; margin: 16pt 0 3pt; }
-    .canon-head { font-size: 12pt; margin: 12pt 0 4pt; }
+    .head-cross { font-size: 12pt; }
+    .prayer p { font-size: 13pt; margin-bottom: 7pt; }
+    .psalm-head { font-size: 14pt; margin: 16pt 0 3pt; }
+    .canon-head { font-size: 13pt; margin: 12pt 0 4pt; }
     .inscription,
     .rubric-line,
-    .prostration { font-size: 11pt; }
+    .prostration { font-size: 12pt; }
     .rubric-line { margin: 10pt 0 6pt; }
     .glory { margin: 10pt 0; }
-    .finis { font-size: 14pt; margin-top: 16pt; }
-    .toc a { font-size: 13pt; border-bottom: none; }
-    .toc .who { font-size: 9.5pt; }
+    .finis { font-size: 15pt; margin-top: 10pt; break-before: avoid; }
+    .toc a { font-size: 14pt; border-bottom: none; }
+    .toc .who { font-size: 10pt; }
 
     a,
     .prayer a,
