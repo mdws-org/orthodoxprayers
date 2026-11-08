@@ -88,8 +88,7 @@ if (hint) {
 // initial ("T HROUGH", "R ISING"). When the first word is a single letter
 // ("O", "I"), the run-in extends through the following word ("O GOD").
 // Trailing punctuation stays in ordinary type.
-function markRunIn() {
-    const p = document.querySelector(".prayer p.opening");
+function markRunIn(p) {
     if (!p || p.querySelector(".runin")) return;
     const node = p.firstChild;
     if (!node || node.nodeType !== 3) return;
@@ -109,7 +108,7 @@ function markRunIn() {
     p.insertBefore(span, node.nextSibling);
     p.insertBefore(rest, span.nextSibling);
 }
-markRunIn();
+document.querySelectorAll(".prayer p.opening").forEach(markRunIn);
 
 /* ---- Masthead: daily-rotating ornament bar ---------------------------- */
 // theme.js chose the bar in the <head>, before the parser reached this

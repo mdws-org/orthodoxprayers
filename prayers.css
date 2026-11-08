@@ -23,6 +23,7 @@
 
 :root {
     --serif: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+    --text-size: 1.16rem;
     /* Day — parchment */
     --bg: #f5edda;
     --ink: #3b3226;
@@ -56,7 +57,7 @@ body {
     background: var(--bg);
     color: var(--ink);
     font-family: var(--serif);
-    line-height: 1.65;
+    line-height: 1.55;
     transition: background 0.35s, color 0.35s;
     min-height: 100vh;
     display: flex;
@@ -68,14 +69,16 @@ body {
    tied by a hairline rule -- the printed books' title-and-folio line. The
    two ends are styled identically on purpose: the left is a link and the
    right is a control, but the typography refuses to admit it. */
+/* Same width and side padding as main.page, so the running head spans
+   exactly the text column. */
 header {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    max-width: 38em;
+    max-width: 34em;
     width: 100%;
     margin: 0 auto;
-    padding: 1.2rem 1.25rem 0;
+    padding: 1.2rem 1.5rem 0;
 }
 header a,
 header span {
@@ -164,20 +167,26 @@ main.page {
     :root:not([data-theme="day"]) :is(.ornament, .wink) { filter: invert(0.9); }
 }
 
+/* Letter-spacing also follows the last letter, which pushes a centered line
+   left by half the tracking; the matching text-indent puts it back. */
 .section-label {
     text-align: center;
     color: var(--rubric);
-    font-size: 0.72rem;
-    letter-spacing: 0.32em;
+    font-size: 0.8rem;
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
     text-transform: uppercase;
     margin-bottom: 0.9rem;
 }
+/* Balanced so a long title or subtitle never leaves one word on its own
+   line. */
 h1 {
     text-align: center;
     font-weight: 500;
     font-size: 2rem;
     letter-spacing: 0.01em;
     margin-bottom: 0.55rem;
+    text-wrap: balance;
 }
 .attribution {
     text-align: center;
@@ -185,6 +194,7 @@ h1 {
     font-style: italic;
     font-size: 1rem;
     margin-bottom: 2.2rem;
+    text-wrap: balance;
 }
 .rule {
     border: none;
@@ -193,19 +203,40 @@ h1 {
     margin: 0 auto 2.4rem;
 }
 
+/* Prayers and the red rubrics, inscriptions, prostrations and speaker labels
+   share one size (--text-size), as the Hieratikon sets them: red is already
+   the fainter color, so a rubric set smaller is the hardest line on the page
+   to read in a dim church. The page subtitle (.attribution) and the small
+   labels keep their own sizes. */
 .prayer p {
-    font-size: 1.16rem;
+    font-size: var(--text-size);
     text-align: justify;
     hyphens: auto;
-    margin-bottom: 1.15em;
+    margin-bottom: 1em;
 }
 /* Small red cross above the section title, as the printed books head their
-   pages. */
-.head-cross {
-    text-align: center;
+   pages, and again at the close (.finis). EB Garamond has no U+2720, so the
+   character fell back to a system symbol font; the cross is drawn instead
+   from the site's own cross art as a mask in the rubric color. The character
+   stays in the markup, hidden at font-size 0, as the fallback where masks
+   are not supported. The SVG is precached so the cross shows offline. */
+.head-cross,
+.finis {
+    font-size: 0;
     color: var(--rubric);
-    font-size: 0.95rem;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: currentColor;
+    -webkit-mask: url(art/icons/byzantine-cross-1.svg) center / contain no-repeat;
+    mask: url(art/icons/byzantine-cross-1.svg) center / contain no-repeat;
+}
+.head-cross {
+    width: 1.05rem;
+    height: 1.05rem;
     margin-bottom: 0.8rem;
+}
+@supports not ((mask: url(#m)) or (-webkit-mask: url(#m))) {
+    .head-cross, .finis { font-size: 0.95rem; background: none; width: auto; height: auto; text-align: center; }
 }
 
 /* The rest of the opening word runs in small caps after the initial
@@ -251,9 +282,8 @@ h1 {
 }
 
 .finis {
-    text-align: center;
-    color: var(--rubric);
-    font-size: 1.35rem;
+    width: 1.5rem;
+    height: 1.5rem;
     margin-top: 2.4rem;
 }
 
@@ -334,12 +364,26 @@ footer a:active { color: var(--rubric); }
 
 /* A phone is read at the same distance as a desktop, so the text must not
    shrink with the page -- if anything it runs a hair larger. Only the
-   heading scales down. Hyphenation (set on .prayer p) is what lets the
-   justified setting survive the ~36-character measure this leaves. */
+   heading scales down.
+
+   Prose is set ragged right here. At the ~40-character measure a phone
+   leaves, justification stretched a word space past twice its width on one
+   line in six, with hyphenation on (measured 2026-11-08, Safari and Chrome).
+   Hyphenation stays on to keep the rag shallow, with at least three letters
+   on each side of a break. The limit lives here and not on the justified
+   desktop text, where it measurably widened word spaces.
+   scripts/check_phone_rag.py fails the build if phone prose is justified
+   again. */
 @media (max-width: 600px) {
+    :root { --text-size: 1.2rem; }
     main.page { padding: 1.9rem 1.5rem 1.8rem; }
     h1 { font-size: 1.6rem; }
-    .prayer p { font-size: 1.2rem; }
+    .prayer p {
+        text-align: left;
+        -webkit-hyphenate-limit-before: 3;
+        -webkit-hyphenate-limit-after: 3;
+        hyphenate-limit-chars: 6 3 3;
+    }
     .ornament { margin-bottom: 1.6rem; }
 }
 
@@ -357,7 +401,7 @@ footer a:active { color: var(--rubric); }
     text-align: center;
     color: var(--rubric);
     font-style: italic;
-    font-size: 1rem;
+    font-size: var(--text-size);
     margin-bottom: 0.9rem;
 }
 .glory {
@@ -405,7 +449,7 @@ footer a:active { color: var(--rubric); }
    small caps in rubric red, so the words to be said stay in ink. Inline at
    the head of a paragraph; a line of its own above a sung text. */
 .prayer .speaker { font-variant: small-caps; color: var(--rubric); letter-spacing: 0.06em; }
-.prayer div.speaker { margin-bottom: 0.35em; }
+.prayer div.speaker { font-size: var(--text-size); margin-bottom: 0.35em; }
 
 /* Verse the source sets line by line (St. Simeon's prayer, the verses said
    before Communion): ragged right, a hanging indent where a line wraps, and
@@ -435,6 +479,9 @@ button.gloss {
     text-decoration-thickness: 1px;
     text-underline-offset: 0.2em;
 }
+/* A glossary term and the punctuation touching it, kept on one line
+   (scripts/add_glossary.py). */
+.nw { white-space: nowrap; }
 .gloss-note {
     position: fixed;
     inset: auto 0 0 0;
@@ -485,7 +532,7 @@ button.gloss {
    troparion it introduces, so the eye can find its place in a long ode. */
 .prayer p.refrain { font-style: italic; margin-bottom: 0.3em; }
 
-.rubric-line { color: var(--rubric); font-style: italic; margin: 1.4rem 0 0.9rem; }
+.rubric-line { color: var(--rubric); font-style: italic; font-size: var(--text-size); margin: 1.4rem 0 0.9rem; }
 
 /* The prostration after each petition of the Commemoration. Centered and set
    tighter than a rubric-line: it recurs eighteen times, and at rubric-line
@@ -493,6 +540,7 @@ button.gloss {
 .prostration {
     color: var(--rubric);
     font-style: italic;
+    font-size: var(--text-size);
     text-align: center;
     margin: 0.7rem 0 1.15rem;
 }
@@ -509,11 +557,13 @@ button.gloss {
 header a,
 #theme,
 footer a,
-.knav a { position: relative; }
+.knav a,
+.toc a { position: relative; }
 header a::after,
 #theme::after,
 footer a::after,
-.knav a::after {
+.knav a::after,
+.toc a::after {
     content: "";
     position: absolute;
     inset: min(0px, (100% - 44px) / 2);
@@ -601,7 +651,11 @@ footer a::after,
     .section-label { font-size: 9pt; }
     .attribution { font-size: 13pt; margin-bottom: 14pt; }
     .rule { margin-bottom: 16pt; }
-    .head-cross { font-size: 12pt; }
+    /* The crosses are a background color shown through a mask, and browsers
+       drop backgrounds when printing unless told to keep them. */
+    .head-cross,
+    .finis { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .head-cross { width: 12pt; height: 12pt; }
     .prayer p { font-size: 13pt; margin: 0; }
     .prayer > p + p { text-indent: 1.25em; }
     .prayer > p + p:is(.refrain, .glory, .prostration, .inscription) { text-indent: 0; }
@@ -614,7 +668,7 @@ footer a::after,
     .rubric-line { margin: 10pt 0 6pt; }
     .glory,
     .prayer .glory { margin: 10pt 0; }
-    .finis { font-size: 15pt; margin-top: 10pt; break-before: avoid; }
+    .finis { width: 15pt; height: 15pt; margin-top: 10pt; break-before: avoid; }
     .toc a { font-size: 14pt; border-bottom: none; }
     .toc .who { font-size: 10pt; }
 
