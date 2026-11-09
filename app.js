@@ -110,12 +110,6 @@ function markRunIn(p) {
 }
 document.querySelectorAll(".prayer p.opening").forEach(markRunIn);
 
-// Typesetting proof switches, on the beta preview and localhost only;
-// preview.js and these lines are removed before the change reaches main.
-if (/^(beta\.|127\.0\.0\.1$|localhost$)/.test(location.hostname)) {
-    import("./preview.js").then((m) => m.default({ markRunIn }));
-}
-
 /* ---- Masthead: daily-rotating ornament bar ---------------------------- */
 // theme.js chose the bar in the <head>, before the parser reached this
 // element, and preloaded it -- see the long note there for why the choice
