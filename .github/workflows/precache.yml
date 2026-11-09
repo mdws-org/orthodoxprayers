@@ -8,6 +8,9 @@
 #
 # And when the service worker's install step can take a file from before the
 # current deploy (the browser's HTTP cache or an edge copy).
+#
+# And when a page uses a character the bundled fonts cannot draw, or when
+# prayer text on a phone would be justified again.
 name: precache
 on:
   push:
@@ -25,3 +28,6 @@ jobs:
       - run: python3 scripts/check_text_compline_canons.py
       - run: python3 scripts/check_text_typika.py
       - run: python3 scripts/check_glossary.py
+      - run: python3 scripts/check_phone_rag.py
+      - run: pip install fonttools==4.60.1 brotli==1.1.0
+      - run: python3 scripts/check_font_coverage.py

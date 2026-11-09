@@ -60,6 +60,27 @@ GLOSS = {
 }
 BLOCK = re.compile(r'(<(?:div|h2) class="(inscription|rubric-line|psalm-head)"[^>]*>)(.*?)(</(?:div|h2)>)')
 NOTE = re.compile(r'<div id="g-([a-z]+)" class="gloss-note" popover>.*?</div>')
+# A button is an atomic inline box, so a line may break on either side of it,
+# even between it and the punctuation it touches: "(" left at a line end, "."
+# carried to the start of the next. Punctuation touching a button is held to
+# it in a no-wrap span.
+BUTTON = r'<button type="button" class="gloss"[^>]*>[^<]*</button>'
+NOWRAP_OLD = re.compile(r'<span class="nw">(.*?</button>[^<\s]*)</span>')
+NOWRAP = re.compile(r'([(\[“‘]*)(' + BUTTON + r')([.,:;!?)\]”’]*)')
+
+
+def hold_punctuation(text):
+    """Wrap each button and the punctuation touching it in <span class="nw">.
+
+    Idempotent: existing spans are removed first and set again."""
+    text = NOWRAP_OLD.sub(r"\1", text)
+
+    def span(m):
+        if not m.group(1) and not m.group(3):
+            return m.group(0)
+        return f'<span class="nw">{m.group(0)}</span>'
+
+    return NOWRAP.sub(span, text)
 
 
 def note(key):
@@ -102,14 +123,14 @@ def process(page):
     if "</main>" not in text:
         return None
     if 'class="gloss"' in text:
-        page.write_text(NOTE.sub(lambda m: note(m.group(1)), text))
+        page.write_text(hold_punctuation(NOTE.sub(lambda m: note(m.group(1)), text)))
         return sorted(set(NOTE.findall(text)))
     used = set()
 
     def block(m):
         return m.group(1) + wrap_text(m.group(3), m.group(2) != "rubric-line", used) + m.group(4)
 
-    text = BLOCK.sub(block, text)
+    text = hold_punctuation(BLOCK.sub(block, text))
     if not used:
         return None
     notes = "\n".join("        " + note(key) for key in GLOSS if key in used)
