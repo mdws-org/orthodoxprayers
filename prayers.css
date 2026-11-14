@@ -371,24 +371,32 @@ footer a:active { color: var(--rubric); }
    shrink with the page -- if anything it runs a hair larger. Only the
    heading scales down.
 
-   Prose is set ragged right here. At the ~40-character measure a phone
-   leaves, justification stretched a word space past twice its width on one
-   line in six, with hyphenation on (measured 2026-11-08, Safari and Chrome).
-   Hyphenation stays on to keep the rag shallow, with at least three letters
-   on each side of a break. The limit lives here and not on the justified
-   desktop text, where it measurably widened word spaces.
-   scripts/check_phone_rag.py fails the build if phone prose is justified
-   again. */
+   Prose is justified here as on a wide screen, as the printed prayer books
+   set it. justify.js sets each paragraph's lines; the rules below are what a
+   phone shows when that script does not run. At the ~40-character measure
+   the browser's own justification stretched a word space past twice its
+   width on one line in five, so the word space starts 0.05em tighter (one
+   line in ten, measured 2026-11-13 in WebKit), closing punctuation may hang
+   in the margin, and no more than two lines in a row end in a hyphen. A
+   break keeps at least three letters on each side; that limit lives here
+   and not on the wide column, where it measurably widened word spaces.
+   Verse and petitions are short lines set ragged and keep the normal
+   space. scripts/check_justify.mjs fails the build if the set lines come
+   out loose. */
 @media (max-width: 600px) {
     :root { --text-size: 1.2rem; }
     main.page { padding: 1.9rem 1.5rem 1.8rem; }
     h1 { font-size: 1.6rem; }
     .prayer p {
-        text-align: left;
+        word-spacing: -0.05em;
+        hanging-punctuation: first allow-end;
         -webkit-hyphenate-limit-before: 3;
         -webkit-hyphenate-limit-after: 3;
         hyphenate-limit-chars: 6 3 3;
+        -webkit-hyphenate-limit-lines: 2;
     }
+    .prayer .prayer.indented p,
+    .prayer .verse p { word-spacing: normal; }
     .ornament { margin-bottom: 1.6rem; }
 }
 
@@ -577,6 +585,10 @@ footer a::after,
 /* Hover only where a pointer can hover: on a touch screen a tap would leave
    the hover color stuck. Each rule has an :active twin beside its element,
    so a tap shows the same mark while the finger is down. */
+/* While justify.js is setting the lines it measures the font's own word
+   space and hangs punctuation itself. */
+:root[data-justify="on"] .prayer p { word-spacing: normal; hanging-punctuation: none; }
+
 @media (hover: hover) and (pointer: fine) {
     header a:hover { color: var(--rubric); }
     #theme:hover { color: var(--rubric); }
