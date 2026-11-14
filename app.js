@@ -153,6 +153,13 @@ if (wink) {
     wink.src = "/art/icons/" + ICONS[Math.floor(Math.random() * ICONS.length)] + ".svg";
 }
 
+// Justification proof switches, on the beta preview and localhost only;
+// preview.js, vendor/justif and these lines are removed before the change
+// reaches main.
+if (/^(beta\.|127\.0\.0\.1$|localhost$)/.test(location.hostname)) {
+    import("./preview.js").then((m) => m.default());
+}
+
 /* ---- PWA ------------------------------------------------------------- */
 if ("serviceWorker" in navigator) {
     // Absolute path: this module is loaded from subpages too, and a relative
