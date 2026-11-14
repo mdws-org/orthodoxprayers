@@ -153,6 +153,10 @@ if (wink) {
     wink.src = "/art/icons/" + ICONS[Math.floor(Math.random() * ICONS.length)] + ".svg";
 }
 
+/* ---- Justified prose -------------------------------------------------- */
+// After the run-in above, which changes the opening paragraph's text nodes.
+import("./justify.js").then((m) => m.default()).catch(() => {});
+
 /* ---- PWA ------------------------------------------------------------- */
 if ("serviceWorker" in navigator) {
     // Absolute path: this module is loaded from subpages too, and a relative
