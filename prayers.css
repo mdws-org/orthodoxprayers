@@ -294,13 +294,18 @@ h1 {
 .toc-head { font-weight: normal; margin: 2.4rem 0 1rem; }
 .rule + .toc-head { margin-top: 0; }
 .toc li { margin-bottom: 0.9rem; text-align: center; }
+/* The underline sits at the font's descent line (0.298em below the baseline
+   in EB Garamond), clear of the descenders, so it never breaks around them. */
 .toc a {
     color: var(--ink);
-    text-decoration: none;
     font-size: 1.25rem;
-    border-bottom: 1px solid var(--rule);
+    text-decoration: underline;
+    text-decoration-color: var(--rule);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.298em;
+    text-decoration-skip-ink: none;
 }
-.toc a:active { color: var(--rubric); border-color: var(--rubric); }
+.toc a:active { color: var(--rubric); text-decoration-color: var(--rubric); }
 .toc .who {
     display: block;
     color: var(--ink-soft);
@@ -580,7 +585,7 @@ footer a::after,
         text-decoration-thickness: 2px;
         text-underline-offset: 0.18em;
     }
-    .toc a:hover { color: var(--rubric); border-color: var(--rubric); }
+    .toc a:hover { color: var(--rubric); text-decoration-color: var(--rubric); }
     .hint:hover { opacity: 0.75; }
     footer a:hover { color: var(--rubric); }
     .knav a:hover { color: var(--rubric); border-color: var(--rubric); }
@@ -669,7 +674,7 @@ footer a::after,
     .glory,
     .prayer .glory { margin: 10pt 0; }
     .finis { width: 15pt; height: 15pt; margin-top: 10pt; break-before: avoid; }
-    .toc a { font-size: 14pt; border-bottom: none; }
+    .toc a { font-size: 14pt; }
     .toc .who { font-size: 10pt; }
 
     a,
