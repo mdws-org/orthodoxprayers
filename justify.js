@@ -61,11 +61,17 @@ async function set(debug) {
     const all = [...document.querySelectorAll(".prayer p")];
     const targets = all.filter((p) => getComputedStyle(p).textAlign === "justify");
     if (!targets.length) return;
+    const stage = (name) => { if (debug) root.dataset.justifyStage = name; };
+    stage("loading");
     const [{ justify }, { hyphenateEnUS }] = await Promise.all([
         import("./vendor/justif/index.js"),
         import("./vendor/justif/hyphenate/en-us.js"),
     ]);
-    if (document.fonts) await document.fonts.ready;
+    // The library sets the lines again when a font arrives, so a font that is
+    // slow or never reports ready does not hold the page on the fallback.
+    stage("fonts");
+    if (document.fonts) await Promise.race([document.fonts.ready, new Promise((done) => setTimeout(done, 2000))]);
+    stage("setting");
 
     // prayers.css tightens the word space for the browser's own justification;
     // this attribute lifts that, so the library measures the font's own space.
@@ -84,7 +90,8 @@ async function set(debug) {
         onSkip: debug ? (...why) => skipped.push(why) : undefined,
     });
     if (debug) {
-        await controller.ready;
+        stage("set");
+        await Promise.race([controller.ready, new Promise((done) => setTimeout(done, 5000))]);
         console.info(`justify: ${controller.managed.length} of ${targets.length} paragraphs set`, skipped);
         root.dataset.justifySet = `${controller.managed.length}/${targets.length}`;
     }

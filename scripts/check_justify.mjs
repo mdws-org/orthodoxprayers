@@ -157,13 +157,14 @@ for (const width of WIDTHS) {
         if (off.paragraphs) {
             await page.waitForFunction(() => document.documentElement.dataset.justifySet, null, { timeout: 30000 }).catch(() => { set = false; });
         }
+        const stalledAt = set ? "" : await page.evaluate(() => document.documentElement.dataset.justifyStage || "before the script ran");
         await page.waitForTimeout(100);
         const on = await page.evaluate(measure);
         await page.close();
 
         const where = `${path} at ${width}px`;
         if (errors.length) failures.push(`${where}: script error: ${errors[0]}`);
-        if (!set) failures.push(`${where}: the script did not finish setting the lines within 30 seconds${said.length ? " (" + said.slice(0, 3).join("; ") + ")" : ""}`);
+        if (!set) failures.push(`${where}: the script did not finish setting the lines within 30 seconds, stopped at "${stalledAt}"${said.length ? " (" + said.slice(0, 3).join("; ") + ")" : ""}`);
         if (on.wide) failures.push(`${where}: the page is wider than the window`);
         if (on.text.join("\n") !== off.text.join("\n")) failures.push(`${where}: the prayer text differs once the lines are set`);
         for (const word of on.divided) if (PROTECTED.has(word.replace("-", "").toLowerCase())) failures.push(`${where}: the protected word "${word}" is divided`);
