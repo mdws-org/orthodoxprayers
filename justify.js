@@ -12,6 +12,8 @@
 // ?justify=off turns it off on this device, ?justify=on turns it back on,
 // ?justify=debug reports what was set.
 
+import { PROTECTED, BREAKS } from "./justify-words.js";
+
 const KEY = "prayers-justify";
 const root = document.documentElement;
 
@@ -24,16 +26,13 @@ const OPTIONS = {
     protrusion: true,
 };
 
-// At least three letters stay on each side of a break, and a word the page
-// capitalises away from a sentence start (God, Christ, Theotokos, Thine) is
-// never divided, as in the 1982 book.
-function wordRules(base, paragraphs) {
-    const proper = new Set();
-    const re = /(?<![.!?:;]["'”’)]?\s)(?<=\S\s)[A-Z][a-z]{4,}/g;
-    for (const p of paragraphs) for (const m of p.textContent.matchAll(re)) proper.add(m[0].toLowerCase());
+// At least three letters stay on each side of a break. A protected word
+// (justify-words.js) is never divided, and a word with hand-set break points
+// uses those.
+function wordRules(base) {
     return (word) => {
-        if (proper.has(word)) return [word];
-        const parts = base(word).slice();
+        if (PROTECTED.has(word)) return [word];
+        const parts = (Object.hasOwn(BREAKS, word) ? BREAKS[word] : base(word)).slice();
         while (parts.length > 1 && parts[0].length < 3) parts.splice(0, 2, parts[0] + parts[1]);
         while (parts.length > 1 && parts[parts.length - 1].length < 3) parts.splice(-2, 2, parts[parts.length - 2] + parts[parts.length - 1]);
         return parts;
@@ -62,11 +61,17 @@ async function set(debug) {
     const all = [...document.querySelectorAll(".prayer p")];
     const targets = all.filter((p) => getComputedStyle(p).textAlign === "justify");
     if (!targets.length) return;
+    const stage = (name) => { if (debug) root.dataset.justifyStage = name; };
+    stage("loading");
     const [{ justify }, { hyphenateEnUS }] = await Promise.all([
         import("./vendor/justif/index.js"),
         import("./vendor/justif/hyphenate/en-us.js"),
     ]);
-    if (document.fonts) await document.fonts.ready;
+    // The library sets the lines again when a font arrives, so a font that is
+    // slow or never reports ready does not hold the page on the fallback.
+    stage("fonts");
+    if (document.fonts) await Promise.race([document.fonts.ready, new Promise((done) => setTimeout(done, 2000))]);
+    stage("setting");
 
     // prayers.css tightens the word space for the browser's own justification;
     // this attribute lifts that, so the library measures the font's own space.
@@ -81,11 +86,12 @@ async function set(debug) {
     const skipped = [];
     controller = justify(targets, {
         ...OPTIONS,
-        hyphenate: wordRules(hyphenateEnUS, all),
+        hyphenate: wordRules(hyphenateEnUS),
         onSkip: debug ? (...why) => skipped.push(why) : undefined,
     });
     if (debug) {
-        await controller.ready;
+        stage("set");
+        await Promise.race([controller.ready, new Promise((done) => setTimeout(done, 5000))]);
         console.info(`justify: ${controller.managed.length} of ${targets.length} paragraphs set`, skipped);
         root.dataset.justifySet = `${controller.managed.length}/${targets.length}`;
     }
