@@ -87,8 +87,9 @@ in America); portions translated by +DMITRI, Archbishop of Dallas and the
 South. © 2004–2005 St Seraphim Orthodox Cathedral.
 
 The ornament bars come from the Orthodox Illustration Project. The small cross at the head
-and foot of each page (`art/icons/cross-pattee.svg`) is drawn for this site
-after the one in the prayer books of St. Tikhon's Monastery Press.
+and foot of each page (`art/icons/cross-pattee.svg`) is the U+2720 glyph of the
+Ponomar font, © The Ponomar Project Authors, under the SIL Open Font License
+1.1 (`art/icons/OFL-Ponomar.txt`).
 
 ## License
 
