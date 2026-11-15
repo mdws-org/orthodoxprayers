@@ -29,6 +29,8 @@ jobs:
       - run: python3 scripts/check_text_compline_canons.py
       - run: python3 scripts/check_text_typika.py
       - run: python3 scripts/check_glossary.py
+      # The rubric marks are up to date: running the step again changes no page.
+      - run: python3 scripts/set_rubrics.py && git diff --exit-code -- '*.html'
       - run: pip install fonttools==4.60.1 brotli==1.1.0
       - run: python3 scripts/check_font_coverage.py
       - run: npm install --no-save --ignore-scripts playwright-core@1.62.1
