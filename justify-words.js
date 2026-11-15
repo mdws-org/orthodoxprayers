@@ -60,7 +60,7 @@ export const MAY_DIVIDE = new Set([
     "grace", "hades", "hagarenes", "heaven", "hebrew", "hermon", "holiness", "horeb", "immortality",
     "isabel", "ishmaelites", "jabin", "jerusalem", "jordan", "judas", "judgment", "kadesh", "kedar",
     "kingdom", "kishon", "ladder", "lebanon", "lesson", "light", "living", "mercy", "metropolitan",
-    "metropolitans", "midian", "mount", "mountain", "mysteries", "mystery", "mystical",
+    "metropolitans", "midian", "monastery", "mount", "mountain", "mysteries", "mystery", "mystical",
     "nephthalim", "night", "origin", "orthodox", "paradise", "passion", "peace", "people",
     "personal", "pharaoh", "philistine", "philistines", "pontius", "power", "prayer", "prayers",
     "precious", "president", "prodigal", "project", "prokeimenon", "protection", "psalm", "psalter",
