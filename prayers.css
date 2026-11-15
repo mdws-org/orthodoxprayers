@@ -227,12 +227,12 @@ h1 {
     margin-left: auto;
     margin-right: auto;
     background-color: currentColor;
-    -webkit-mask: url(art/icons/byzantine-cross-1.svg) center / contain no-repeat;
-    mask: url(art/icons/byzantine-cross-1.svg) center / contain no-repeat;
+    -webkit-mask: url(art/icons/cross-pattee.svg) center / contain no-repeat;
+    mask: url(art/icons/cross-pattee.svg) center / contain no-repeat;
 }
 .head-cross {
-    width: 1.05rem;
-    height: 1.05rem;
+    width: 1.2rem;
+    height: 1.2rem;
     margin-bottom: 0.8rem;
 }
 @supports not ((mask: url(#m)) or (-webkit-mask: url(#m))) {
@@ -244,14 +244,23 @@ h1 {
 .prayer p.opening .runin {
     font-variant: small-caps;
     letter-spacing: 0.05em;
+    padding-left: var(--cap-lead, 0em);
 }
+/* The word space after a one-letter opening word ("O Lord"): kept in the
+   text, given no width, so line 1 starts at the edge --cap-lead sets and
+   not a word space further right than line 2. */
+.prayer p.opening .runin-gap { font-size: 0; }
 
 .prayer p.opening::first-letter {
     color: var(--rubric);
     font-size: 3.4em;
     float: left;
     line-height: 0.82;
-    padding: 0.06em 0.12em 0 0;
+    padding: 0.06em 0 0 0;
+    /* How far the lines beside the capital stand from its box. markRunIn
+       sets --cap-fit and --cap-lead for the letter from drop-caps.js, so the
+       text sits the same distance from an O's curve as from a T's arm. */
+    margin-right: var(--cap-fit, 0.04em);
     font-weight: 500;
 }
 

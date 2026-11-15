@@ -86,7 +86,9 @@ The Psalter of St Seraphim Orthodox Cathedral, Dallas, Texas (Orthodox Church
 in America); portions translated by +DMITRI, Archbishop of Dallas and the
 South. © 2004–2005 St Seraphim Orthodox Cathedral.
 
-The ornament bars come from the Orthodox Illustration Project.
+The ornament bars come from the Orthodox Illustration Project. The small cross at the head
+and foot of each page (`art/icons/cross-pattee.svg`) is drawn for this site
+after the one in the prayer books of St. Tikhon's Monastery Press.
 
 ## License
 

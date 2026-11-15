@@ -15,10 +15,10 @@
 // Run from the repository root: node scripts/check_justify.mjs
 // PLAYWRIGHT_CORE and WEBKIT_PATH point at an existing install; REPORT=1
 // prints every page.
-import { createServer } from "node:http";
-import { readFileSync, existsSync, statSync } from "node:fs";
-import { extname, join, normalize } from "node:path";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { serve } from "./site_server.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const WIDTHS = [390, 1280];
@@ -27,17 +27,7 @@ const WIDTHS = [390, 1280];
 // with at least 100 justified lines.
 const LIMIT = { all2: 3, all25: 1, page2: 6, page25: 2.5 };
 
-const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2", ".svg": "image/svg+xml", ".png": "image/png", ".webmanifest": "application/manifest+json" };
-const server = createServer((req, res) => {
-    let path = normalize(decodeURIComponent(new URL(req.url, "http://x").pathname));
-    let file = join(ROOT, path);
-    if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }
-    if (existsSync(file) && statSync(file).isDirectory()) file = join(file, "index.html");
-    if (!existsSync(file)) { res.writeHead(404).end(); return; }
-    res.writeHead(200, { "content-type": TYPES[extname(file)] || "application/octet-stream" }).end(readFileSync(file));
-});
-await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
-const base = `http://127.0.0.1:${server.address().port}`;
+const { base, close } = await serve(ROOT);
 
 // Pages come from the service worker's precache list: every entry ending in "/".
 const sw = readFileSync(join(ROOT, "sw.js"), "utf8");
@@ -184,7 +174,7 @@ for (const width of WIDTHS) {
     await ctxOff.close();
 }
 await browser.close();
-server.close();
+close();
 if (failures.length) {
     console.error("check_justify: FAILED\n  " + failures.join("\n  "));
     process.exit(1);
