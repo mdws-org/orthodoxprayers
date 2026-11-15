@@ -54,13 +54,26 @@ let controller = null;
 
 function release() {
     if (controller) { controller.destroy(); controller = null; }
+    for (const p of document.querySelectorAll(".prayer p.short-response")) p.classList.remove("short-response");
     delete root.dataset.justify;
+}
+
+// A response of one or two lines under a speaker's label ("Choir: Holy God,
+// Holy Mighty, Holy Immortal, have mercy on us.") is left ragged, as verse
+// and petitions are: its first line is a row of short words that cannot be
+// divided, and justified it is stretched across the column.
+function markShortResponses(paragraphs) {
+    const short = paragraphs.filter((p) => {
+        const label = p.firstElementChild;
+        if (!label || p.firstChild !== label || !label.classList.contains("speaker")) return false;
+        return p.getBoundingClientRect().height <= 2.5 * parseFloat(getComputedStyle(p).lineHeight);
+    });
+    for (const p of short) p.classList.add("short-response");
 }
 
 async function set(debug) {
     const all = [...document.querySelectorAll(".prayer p")];
-    const targets = all.filter((p) => getComputedStyle(p).textAlign === "justify");
-    if (!targets.length) return;
+    if (!all.some((p) => getComputedStyle(p).textAlign === "justify")) return;
     const stage = (name) => { if (debug) root.dataset.justifyStage = name; };
     stage("loading");
     const [{ justify }, { hyphenateEnUS }] = await Promise.all([
@@ -76,6 +89,9 @@ async function set(debug) {
     // prayers.css tightens the word space for the browser's own justification;
     // this attribute lifts that, so the library measures the font's own space.
     root.dataset.justify = "on";
+    markShortResponses(all);
+    const targets = all.filter((p) => getComputedStyle(p).textAlign === "justify");
+    if (!targets.length) { release(); return; }
     // A reader's own stylesheet that sets letter or word spacing wins: the
     // lines would be measured for spacing they are not shown with.
     const cs = getComputedStyle(targets[0]);
@@ -102,6 +118,15 @@ export default function start() {
     if (off) return;
     const run = () => set(debug).catch((e) => { release(); if (debug) console.error("justify:", e); });
     run();
+    // Which responses run to two lines depends on the column, so a change of
+    // width starts over. The library follows the width by itself otherwise.
+    let width = innerWidth, pending = 0;
+    addEventListener("resize", () => {
+        if (innerWidth === width) return;
+        width = innerWidth;
+        clearTimeout(pending);
+        pending = setTimeout(() => { release(); run(); }, 200);
+    });
     // Lines set for the screen's column would be wrong on paper.
     addEventListener("beforeprint", release);
     addEventListener("afterprint", run);

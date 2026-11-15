@@ -588,6 +588,8 @@ footer a::after,
 /* While justify.js is setting the lines it measures the font's own word
    space and hangs punctuation itself. */
 :root[data-justify="on"] .prayer p { word-spacing: normal; hanging-punctuation: none; }
+/* A one- or two-line response under a speaker's label, marked by justify.js. */
+.prayer p.short-response { text-align: left; }
 
 @media (hover: hover) and (pointer: fine) {
     header a:hover { color: var(--rubric); }
