@@ -12,6 +12,8 @@
 // ?justify=off turns it off on this device, ?justify=on turns it back on,
 // ?justify=debug reports what was set.
 
+import { PROTECTED, BREAKS } from "./justify-words.js";
+
 const KEY = "prayers-justify";
 const root = document.documentElement;
 
@@ -24,16 +26,13 @@ const OPTIONS = {
     protrusion: true,
 };
 
-// At least three letters stay on each side of a break, and a word the page
-// capitalises away from a sentence start (God, Christ, Theotokos, Thine) is
-// never divided, as in the 1982 book.
-function wordRules(base, paragraphs) {
-    const proper = new Set();
-    const re = /(?<![.!?:;]["'”’)]?\s)(?<=\S\s)[A-Z][a-z]{4,}/g;
-    for (const p of paragraphs) for (const m of p.textContent.matchAll(re)) proper.add(m[0].toLowerCase());
+// At least three letters stay on each side of a break. A protected word
+// (justify-words.js) is never divided, and a word with hand-set break points
+// uses those.
+function wordRules(base) {
     return (word) => {
-        if (proper.has(word)) return [word];
-        const parts = base(word).slice();
+        if (PROTECTED.has(word)) return [word];
+        const parts = (Object.hasOwn(BREAKS, word) ? BREAKS[word] : base(word)).slice();
         while (parts.length > 1 && parts[0].length < 3) parts.splice(0, 2, parts[0] + parts[1]);
         while (parts.length > 1 && parts[parts.length - 1].length < 3) parts.splice(-2, 2, parts[parts.length - 2] + parts[parts.length - 1]);
         return parts;
@@ -81,7 +80,7 @@ async function set(debug) {
     const skipped = [];
     controller = justify(targets, {
         ...OPTIONS,
-        hyphenate: wordRules(hyphenateEnUS, all),
+        hyphenate: wordRules(hyphenateEnUS),
         onSkip: debug ? (...why) => skipped.push(why) : undefined,
     });
     if (debug) {
