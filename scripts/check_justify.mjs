@@ -123,7 +123,8 @@ const unfiled = new Map();
 for (const path of pages) {
     const html = readFileSync(join(ROOT, path, "index.html"), "utf8");
     for (const para of html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)) {
-        const text = para[1].replace(/<[^>]+>/g, "").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ");
+        // Words only: the markup between them is dropped by splitting on it.
+        const text = para[1].split(/<[^>]*>/).join("").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ");
         for (const m of text.matchAll(/(\S+)\s([A-Z][a-z]{5,})/g)) {
             if (/[.!?:;]["'\u201d\u2019)]?$/.test(m[1])) continue;
             const word = m[2].toLowerCase();
@@ -147,15 +148,22 @@ for (const width of WIDTHS) {
 
         const page = await ctx.newPage();
         const errors = [];
+        const said = [];
         page.on("pageerror", (e) => errors.push(e.message));
+        page.on("console", (m) => { if (m.type() === "error" || /justify/.test(m.text())) said.push(m.text()); });
+        page.on("requestfailed", (r) => said.push(`request failed: ${r.url()}`));
         await page.goto(base + path + "?justify=debug", { waitUntil: "load" });
-        if (off.paragraphs) await page.waitForFunction(() => document.documentElement.dataset.justifySet, null, { timeout: 30000 });
+        let set = true;
+        if (off.paragraphs) {
+            await page.waitForFunction(() => document.documentElement.dataset.justifySet, null, { timeout: 30000 }).catch(() => { set = false; });
+        }
         await page.waitForTimeout(100);
         const on = await page.evaluate(measure);
         await page.close();
 
         const where = `${path} at ${width}px`;
         if (errors.length) failures.push(`${where}: script error: ${errors[0]}`);
+        if (!set) failures.push(`${where}: the script did not finish setting the lines within 30 seconds${said.length ? " (" + said.slice(0, 3).join("; ") + ")" : ""}`);
         if (on.wide) failures.push(`${where}: the page is wider than the window`);
         if (on.text.join("\n") !== off.text.join("\n")) failures.push(`${where}: the prayer text differs once the lines are set`);
         for (const word of on.divided) if (PROTECTED.has(word.replace("-", "").toLowerCase())) failures.push(`${where}: the protected word "${word}" is divided`);
