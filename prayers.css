@@ -454,7 +454,13 @@ footer a:active { color: var(--rubric); }
 .notice { max-width: 34em; margin-left: auto; margin-right: auto; }
 
 
-.rubric { color: var(--rubric); font-style: italic; font-variant: normal; letter-spacing: 0; }
+/* A direction is red roman, as the current service books set it; italic is
+   kept for a note and for a passage that explains a service (marked by
+   scripts/set_rubrics.py). A word the source sets in capitals, and a role in
+   a rubric that cues a speaker, is in small caps: the text keeps its
+   capitals and is only shown smaller. */
+.rubric { color: var(--rubric); font-style: normal; font-variant: normal; letter-spacing: 0; }
+.rubric .sc, .rubric-line .sc { text-transform: lowercase; font-variant-caps: small-caps; letter-spacing: 0.05em; }
 
 /* Book-style paragraphing: first-line indents, no inter-paragraph space --
    matches the printed sources that set prayers as indented paragraphs. */
@@ -554,7 +560,8 @@ button.gloss {
    troparion it introduces, so the eye can find its place in a long ode. */
 .prayer p.refrain { font-style: italic; margin-bottom: 0.3em; }
 
-.rubric-line { color: var(--rubric); font-style: italic; font-size: var(--text-size); margin: 1.4rem 0 0.9rem; }
+.rubric-line { color: var(--rubric); font-size: var(--text-size); margin: 1.4rem 0 0.9rem; }
+.rubric-line[data-rubric] { font-style: italic; }
 
 /* The prostration after each petition of the Commemoration. Centered and set
    tighter than a rubric-line: it recurs eighteen times, and at rubric-line
