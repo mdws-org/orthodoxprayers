@@ -137,13 +137,15 @@ for (const [word, path] of unfiled) failures.push(`${path}: "${word}" is capital
 const pct = (n, d) => (d ? (100 * n) / d : 0);
 for (const width of WIDTHS) {
     const ctx = await browser.newContext({ viewport: { width, height: 844 }, serviceWorkers: "block" });
+    // The script-off loads get a context of their own: ?justify=off is remembered
+    // in localStorage, and justify.js may write it after the page's load event.
+    const ctxOff = await browser.newContext({ viewport: { width, height: 844 }, serviceWorkers: "block" });
     const total = { lines: 0, over2: 0, over25: 0, set: 0, paragraphs: 0 };
     for (const path of pages) {
-        const plain = await ctx.newPage();
+        const plain = await ctxOff.newPage();
         await plain.goto(base + path + "?justify=off", { waitUntil: "load" });
         await plain.evaluate(() => document.fonts.ready);
         const off = await plain.evaluate(measure);
-        await plain.evaluate(() => { try { localStorage.removeItem("prayers-justify"); } catch {} });
         await plain.close();
 
         const page = await ctx.newPage();
@@ -179,6 +181,7 @@ for (const width of WIDTHS) {
     if (a2 > LIMIT.all2 || a25 > LIMIT.all25) failures.push(`all pages at ${width}px: ${a2.toFixed(1)}% over 2 spaces and ${a25.toFixed(1)}% over 2.5 (limits ${LIMIT.all2}% and ${LIMIT.all25}%)`);
     if (total.set === 0) failures.push(`all pages at ${width}px: the script set no paragraph`);
     await ctx.close();
+    await ctxOff.close();
 }
 await browser.close();
 server.close();
