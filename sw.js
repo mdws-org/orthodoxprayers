@@ -1,7 +1,7 @@
 // Offline shell for /. Precache everything fixed;
 // cache-first with network fallback. Bump VERSION on any asset change —
 // tbm releases are deliberate, so a manual version string is fine.
-const VERSION = "prayers-v53";
+const VERSION = "prayers-v54";
 const BASE = "/";
 const ASSETS = [
     BASE,
