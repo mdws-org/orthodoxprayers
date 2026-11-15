@@ -1,5 +1,7 @@
 // Fails the build when the justified prayer prose comes out loose, changes
-// the text, or runs off the column.
+// the text, or runs off the column; when a word that justify-words.js
+// protects is divided; and when a page capitalises a word that file does not
+// list.
 //
 // Serves the repository on a local port, opens every page that has prayer
 // prose in WebKit at a phone width and a wide one, lets justify.js set the
@@ -22,11 +24,8 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const WIDTHS = [390, 1280];
 // Share of justified lines, over all pages at one width, whose widest gap
 // may exceed 2 and 2.5 times the font's space, and the same for one page
-// with at least 100 justified lines. The page limit is the looser one: the
-// Commemorations are dense with titles and names that are never divided
-// ("Archbishop of Washington, Metropolitan") and measure 7.9% and 4.4% on a
-// phone; every other page is under 3.5% and 1%.
-const LIMIT = { all2: 3, all25: 1, page2: 9, page25: 5 };
+// with at least 100 justified lines.
+const LIMIT = { all2: 3, all25: 1, page2: 6, page25: 2.5 };
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2", ".svg": "image/svg+xml", ".png": "image/png", ".webmanifest": "application/manifest+json" };
 const server = createServer((req, res) => {
@@ -52,7 +51,7 @@ const browser = await webkit.launch({ headless: true, ...(process.env.WEBKIT_PAT
 // a gap is the distance between neighbouring words on a line, in units of
 // the font's own space advance.
 function measure() {
-    const out = { lines: 0, over2: 0, over25: 0, justified: 0, paragraphs: 0, wide: document.documentElement.scrollWidth > innerWidth + 1, text: [] };
+    const out = { lines: 0, over2: 0, over25: 0, justified: 0, paragraphs: 0, wide: document.documentElement.scrollWidth > innerWidth + 1, text: [], divided: [] };
     for (const p of document.querySelectorAll(".prayer p")) {
         // The library ties the opening word with a no-break space; nothing else
         // in the text may change.
@@ -70,12 +69,30 @@ function measure() {
         probe.remove();
         const space = (a - b) / 10, lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.5;
         const rects = [], walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT);
+        let before = null, spaced = true;
         while (walker.nextNode()) {
-            const n = walker.currentNode, re = /[^\s\u00a0]+/g; let m;
+            const n = walker.currentNode, re = /[^\s\u00a0]+/g; let m, at = 0;
             while ((m = re.exec(n.data))) {
-                const r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length);
-                for (const rc of r.getClientRects()) if (rc.width > 0.5) rects.push(rc);
+                if (m.index > at) spaced = true;
+                at = m.index + m[0].length;
+                const r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, at);
+                const rs = [...r.getClientRects()].filter((rc) => rc.width > 0.5);
+                if (!rs.length) continue;
+                rects.push(...rs);
+                // A word divided by the script is two pieces with no space
+                // between them, on different lines.
+                const mid = (rs[0].top + rs[0].bottom) / 2;
+                if (!spaced && before && Math.abs(mid - before.mid) > lh * 0.45) {
+                    const head = (before.text.match(/[A-Za-z]+$/) || [""])[0], tail = (m[0].match(/^[A-Za-z]+/) || [""])[0];
+                    // A drop cap sits apart from the rest of its word; a real
+                    // division leaves at least three letters on each side.
+                    if (head.length > 1 && tail.length > 1) out.divided.push(head + "-" + tail);
+                }
+                const last = rs[rs.length - 1];
+                before = { text: m[0], mid: (last.top + last.bottom) / 2 };
+                spaced = false;
             }
+            if (at < n.data.length) spaced = true;
         }
         rects.sort((x, y) => (x.top + x.bottom) - (y.top + y.bottom));
         const lines = []; let cur = null;
@@ -98,31 +115,61 @@ function measure() {
 }
 
 const failures = [];
+
+// Every word a page capitalises away from a sentence start, six letters or
+// longer, must be filed in justify-words.js as protected or as free to divide.
+const { PROTECTED, MAY_DIVIDE } = await import(join(ROOT, "justify-words.js"));
+const unfiled = new Map();
+for (const path of pages) {
+    const html = readFileSync(join(ROOT, path, "index.html"), "utf8");
+    for (const para of html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)) {
+        // Words only: the markup between them is dropped by splitting on it.
+        const text = para[1].split(/<[^>]*>/).join("").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ");
+        for (const m of text.matchAll(/(\S+)\s([A-Z][a-z]{5,})/g)) {
+            if (/[.!?:;]["'\u201d\u2019)]?$/.test(m[1])) continue;
+            const word = m[2].toLowerCase();
+            if (!PROTECTED.has(word) && !MAY_DIVIDE.has(word) && !unfiled.has(word)) unfiled.set(word, path);
+        }
+    }
+}
+for (const [word, path] of unfiled) failures.push(`${path}: "${word}" is capitalised and is in neither list of justify-words.js`);
+
 const pct = (n, d) => (d ? (100 * n) / d : 0);
 for (const width of WIDTHS) {
     const ctx = await browser.newContext({ viewport: { width, height: 844 }, serviceWorkers: "block" });
+    // The script-off loads get a context of their own: ?justify=off is remembered
+    // in localStorage, and justify.js may write it after the page's load event.
+    const ctxOff = await browser.newContext({ viewport: { width, height: 844 }, serviceWorkers: "block" });
     const total = { lines: 0, over2: 0, over25: 0, set: 0, paragraphs: 0 };
     for (const path of pages) {
-        const plain = await ctx.newPage();
+        const plain = await ctxOff.newPage();
         await plain.goto(base + path + "?justify=off", { waitUntil: "load" });
         await plain.evaluate(() => document.fonts.ready);
         const off = await plain.evaluate(measure);
-        await plain.evaluate(() => { try { localStorage.removeItem("prayers-justify"); } catch {} });
         await plain.close();
 
         const page = await ctx.newPage();
         const errors = [];
+        const said = [];
         page.on("pageerror", (e) => errors.push(e.message));
+        page.on("console", (m) => { if (m.type() === "error" || /justify/.test(m.text())) said.push(m.text()); });
+        page.on("requestfailed", (r) => said.push(`request failed: ${r.url()}`));
         await page.goto(base + path + "?justify=debug", { waitUntil: "load" });
-        if (off.paragraphs) await page.waitForFunction(() => document.documentElement.dataset.justifySet, null, { timeout: 30000 });
+        let set = true;
+        if (off.paragraphs) {
+            await page.waitForFunction(() => document.documentElement.dataset.justifySet, null, { timeout: 30000 }).catch(() => { set = false; });
+        }
+        const stalledAt = set ? "" : await page.evaluate(() => document.documentElement.dataset.justifyStage || "before the script ran");
         await page.waitForTimeout(100);
         const on = await page.evaluate(measure);
         await page.close();
 
         const where = `${path} at ${width}px`;
         if (errors.length) failures.push(`${where}: script error: ${errors[0]}`);
+        if (!set) failures.push(`${where}: the script did not finish setting the lines within 30 seconds, stopped at "${stalledAt}"${said.length ? " (" + said.slice(0, 3).join("; ") + ")" : ""}`);
         if (on.wide) failures.push(`${where}: the page is wider than the window`);
         if (on.text.join("\n") !== off.text.join("\n")) failures.push(`${where}: the prayer text differs once the lines are set`);
+        for (const word of on.divided) if (PROTECTED.has(word.replace("-", "").toLowerCase())) failures.push(`${where}: the protected word "${word}" is divided`);
         if (width < 600 && off.paragraphs === 0 && on.paragraphs > 0) failures.push(`${where}: with the script off, phone prose is not justified by the stylesheet`);
         const p2 = pct(on.over2, on.lines), p25 = pct(on.over25, on.lines);
         if (on.lines >= 100 && (p2 > LIMIT.page2 || p25 > LIMIT.page25)) failures.push(`${where}: ${p2.toFixed(1)}% of lines have a gap over 2 spaces and ${p25.toFixed(1)}% over 2.5 (limits ${LIMIT.page2}% and ${LIMIT.page25}%)`);
@@ -134,6 +181,7 @@ for (const width of WIDTHS) {
     if (a2 > LIMIT.all2 || a25 > LIMIT.all25) failures.push(`all pages at ${width}px: ${a2.toFixed(1)}% over 2 spaces and ${a25.toFixed(1)}% over 2.5 (limits ${LIMIT.all2}% and ${LIMIT.all25}%)`);
     if (total.set === 0) failures.push(`all pages at ${width}px: the script set no paragraph`);
     await ctx.close();
+    await ctxOff.close();
 }
 await browser.close();
 server.close();
