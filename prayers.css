@@ -691,9 +691,26 @@ footer a::after,
     .head-cross,
     .finis { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .head-cross { width: 12pt; height: 12pt; }
-    .prayer p { font-size: 13pt; margin: 0; }
+    /* A divided word keeps three letters on each side, as on the screen.
+       Browsers count the punctuation after a word as its letters ("mer-cy,"
+       passes a limit of three), so the limit after the break is four. */
+    .prayer p {
+        font-size: 13pt;
+        margin: 0;
+        -webkit-hyphenate-limit-before: 3;
+        -webkit-hyphenate-limit-after: 4;
+        hyphenate-limit-chars: 6 3 4;
+    }
     .prayer > p + p { text-indent: 1.25em; }
     .prayer > p + p:is(.refrain, .glory, .prostration, .inscription) { text-indent: 0; }
+    /* A response under a speaker's label starts at the margin, where the
+       label reads as the start of the line. */
+    .prayer > p + p:has(> .speaker:first-child) { text-indent: 0; }
+    /* The initial stands two lines deep. At the print leading two lines are
+       2.6em, so the capital is smaller than on the screen and its box
+       shorter: at the screen's size the box is deeper than two print lines
+       and a third line stands beside it. */
+    .prayer p.opening::first-letter { font-size: 3em; line-height: 0.78; }
     .prayer p.opening + * { clear: left; }
     .psalm-head { font-size: 14pt; margin: 16pt 0 3pt; }
     .canon-head { font-size: 13pt; margin: 12pt 0 4pt; }
