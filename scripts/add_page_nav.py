@@ -13,7 +13,7 @@ SEQUENCE = [
     ("communion/", "Before Communion"),
     ("communion/thanksgiving/", "After Communion"),
 ]
-FINIS = '        <div class="finis">&#10016;</div>'
+FINIS = '        <div class="finis"><span aria-hidden="true">&#10016;</span></div>'
 
 
 def main():

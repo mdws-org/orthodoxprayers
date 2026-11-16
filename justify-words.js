@@ -16,9 +16,9 @@
 // Names of God, Christ, the Holy Spirit and the Theotokos, and the words
 // that hold the name of Christ.
 const NAMES = [
-    "christ", "christian", "christians", "creator", "divinity", "father", "fathers", "godhead",
-    "himself", "jesus", "maker", "master", "mother", "savior", "saviour", "spirit", "theotokos",
-    "thine", "thyself", "trinity", "virgin", "yourself",
+    "birthgiver", "christ", "christian", "christians", "creator", "divinity", "father", "fathers",
+    "godhead", "himself", "jesus", "maker", "master", "mother", "savior", "saviour", "spirit",
+    "theotokos", "thine", "thyself", "trinity", "virgin", "yourself",
 ];
 
 // Epithets that stand for the name.
@@ -27,21 +27,22 @@ const EPITHETS = [
     "defender", "deliverer", "divine", "emitter", "eternal", "forerunner", "fountain", "giver",
     "gracious", "heavenly", "helper", "highest", "immortal", "incarnate", "instructor",
     "intercessor", "judge", "lover", "maiden", "merciful", "mighty", "mistress", "nourisher",
-    "physician", "pilot", "planter", "protector", "protectress", "provider", "queen", "redeemer",
+    "physician", "pilot", "planter", "protector", "protectress", "provider", "providence", "queen",
+    "redeemer",
     "refuge", "ruler", "shepherd", "sinless", "succorer", "supreme", "treasury",
 ];
 
 const ANGELS = [
-    "angel", "angelic", "angels", "archangels", "cherubim", "guardian", "hosts", "powers",
-    "seraphim",
+    "angel", "angelic", "angels", "archangels", "cherubim", "commanders", "guardian", "hosts",
+    "powers", "seraphim",
 ];
 
 // Saints and prophets, as a company and by name.
 const SAINTS = [
     "aaron", "abraham", "apostle", "apostles", "baptist", "benjamin", "chrysostom", "david",
     "ephraim", "gregory", "isaac", "israel", "jacob", "jesse", "joseph", "judah", "manasses",
-    "martyrs", "melchisedech", "moses", "nicholas", "peter", "phineas", "prophet", "prophets",
-    "saint", "saints", "samuel", "simon",
+    "martyrs", "melchisedech", "moses", "nicholas", "patriarchs", "peter", "phineas", "prophet",
+    "prophets", "saint", "saints", "samuel", "simon",
 ];
 
 export const PROTECTED = new Set([...NAMES, ...EPITHETS, ...ANGELS, ...SAINTS]);
@@ -57,17 +58,18 @@ export const MAY_DIVIDE = new Set([
     "divinely", "dread", "earth", "edomites", "egypt", "endor", "enemy", "ephrata", "epistle",
     "etham", "ethiopia", "ethiopians", "eucharist", "faith", "flesh", "fragrance", "fullness",
     "galaad", "garamond", "gebal", "gehenna", "gentiles", "gifts", "glory", "gospel", "governor",
-    "grace", "hades", "hagarenes", "heaven", "hebrew", "hermon", "holiness", "horeb", "immortality",
-    "isabel", "ishmaelites", "jabin", "jerusalem", "jordan", "judas", "judgment", "kadesh", "kedar",
-    "kingdom", "kishon", "ladder", "lebanon", "lesson", "license", "light", "living", "mercy",
-    "metropolitan", "metropolitans", "midian", "monastery", "mount", "mountain", "mysteries",
-    "mystery", "mystical", "nephthalim", "night", "origin", "orthodox", "paradise", "passion",
-    "peace", "people", "personal", "pharaoh", "philistine", "philistines", "ponomar", "pontius",
-    "power", "prayer", "prayers", "precious", "president", "prodigal", "project", "prokeimenon",
-    "protection", "psalm", "psalter", "rahab", "reader", "reign", "resurrection", "reverend",
-    "revised", "right", "righteous", "righteousness", "russia", "sacred", "sacrifice", "salvation",
-    "sanctification", "satan", "scriptures", "selmon", "seminary", "service", "shechem", "shiloh",
-    "short", "sinai", "sisera", "slavonic", "strength", "supper", "support", "tabernacle", "table",
+    "grace", "gutenberg", "hades", "hagarenes", "hapgood", "heaven", "hebrew", "hermon", "holiness",
+    "horeb", "illustration", "immortality", "isabel", "ishmaelites", "jabin", "jerusalem", "jordan",
+    "judas", "judgment", "kadesh", "kedar", "kingdom", "kishon", "ladder", "lebanon", "lesson",
+    "license", "light", "living", "meadows", "mercy", "metropolitan", "metropolitans", "midian",
+    "monastery", "mount", "mountain", "mysteries", "mystery", "mystical", "nephthalim", "night",
+    "origin", "orthodox", "paradise", "passion", "peace", "people", "personal", "pharaoh",
+    "philistine", "philistines", "pilate", "ponomar", "pontius", "power", "prayer", "prayers",
+    "precious", "president", "prodigal", "project", "prokeimenon", "protection", "psalm", "psalter",
+    "rahab", "reader", "redemption", "reign", "resurrection", "reverend", "revised", "right",
+    "righteous", "righteousness", "russia", "sacred", "sacrifice", "salvation", "sanctification",
+    "satan", "scriptures", "selmon", "seminary", "service", "shechem", "shiloh", "short", "sinai",
+    "sisera", "slavonic", "standard", "strength", "supper", "support", "tabernacle", "table",
     "tanis", "tarshish", "tempter", "thanksgiving", "there", "three", "transgress", "triple",
     "truth", "typika", "universe", "venerable", "version", "washington", "where", "whose", "wisdom",
     "zalmunna", "zebee", "zebulon",
@@ -80,7 +82,6 @@ export const BREAKS = {
     eucharist: ["eu", "cha", "rist"],
     ishmaelites: ["ish", "ma", "el", "ites"],
     jerusalem: ["je", "ru", "sa", "lem"],
-    melchisedech: ["mel", "chis", "e", "dech"],
     metropolitan: ["met", "ro", "pol", "i", "tan"],
     metropolitans: ["met", "ro", "pol", "i", "tans"],
     paradise: ["para", "dise"],

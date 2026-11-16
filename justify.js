@@ -51,8 +51,12 @@ function preference() {
 }
 
 let controller = null;
+// Counts releases. A run that finds the count changed after waiting has been
+// overtaken by a later run and stops, so two runs never set the same lines.
+let generation = 0;
 
 function release() {
+    generation++;
     if (controller) { controller.destroy(); controller = null; }
     for (const p of document.querySelectorAll(".prayer p.short-response")) p.classList.remove("short-response");
     delete root.dataset.justify;
@@ -72,6 +76,9 @@ function markShortResponses(paragraphs) {
 }
 
 async function set(debug) {
+    release();
+    const mine = generation;
+    if (debug) delete root.dataset.justifySet;
     const all = [...document.querySelectorAll(".prayer p")];
     if (!all.some((p) => getComputedStyle(p).textAlign === "justify")) return;
     const stage = (name) => { if (debug) root.dataset.justifyStage = name; };
@@ -80,10 +87,12 @@ async function set(debug) {
         import("./vendor/justif/index.js"),
         import("./vendor/justif/hyphenate/en-us.js"),
     ]);
+    if (mine !== generation) return;
     // The library sets the lines again when a font arrives, so a font that is
     // slow or never reports ready does not hold the page on the fallback.
     stage("fonts");
     if (document.fonts) await Promise.race([document.fonts.ready, new Promise((done) => setTimeout(done, 2000))]);
+    if (mine !== generation) return;
     stage("setting");
 
     // prayers.css tightens the word space for the browser's own justification;
@@ -107,7 +116,14 @@ async function set(debug) {
     });
     if (debug) {
         stage("set");
-        await Promise.race([controller.ready, new Promise((done) => setTimeout(done, 5000))]);
+        const finished = await Promise.race([
+            controller.ready.then(() => true),
+            new Promise((done) => setTimeout(() => done(false), 5000)),
+        ]);
+        if (mine !== generation) return;
+        // The completion mark is what scripts/check_justify.mjs waits for; a
+        // run that has not finished must not carry it.
+        if (!finished) { stage("timed out"); return; }
         console.info(`justify: ${controller.managed.length} of ${targets.length} paragraphs set`, skipped);
         root.dataset.justifySet = `${controller.managed.length}/${targets.length}`;
     }
@@ -116,18 +132,50 @@ async function set(debug) {
 export default function start() {
     const { off, debug } = preference();
     if (off) return;
-    const run = () => set(debug).catch((e) => { release(); if (debug) console.error("justify:", e); });
+    // Lines set for the screen's column would be wrong on paper: nothing is
+    // set from the moment printing starts until it ends.
+    const print = matchMedia("print");
+    let printing = false;
+    const run = () => {
+        if (printing || print.matches) return;
+        set(debug).catch((e) => { release(); if (debug) console.error("justify:", e); });
+    };
     run();
+    let pending = 0;
+    const rerun = () => {
+        clearTimeout(pending);
+        pending = setTimeout(run, 200);
+    };
     // Which responses run to two lines depends on the column, so a change of
     // width starts over. The library follows the width by itself otherwise.
-    let width = innerWidth, pending = 0;
+    let width = innerWidth;
     addEventListener("resize", () => {
         if (innerWidth === width) return;
         width = innerWidth;
-        clearTimeout(pending);
-        pending = setTimeout(() => { release(); run(); }, 200);
+        rerun();
     });
-    // Lines set for the screen's column would be wrong on paper.
-    addEventListener("beforeprint", release);
-    addEventListener("afterprint", run);
+    // The library does not notice a change of text size (the reader's browser
+    // setting, a zoom of text only): the lines it set would run past the
+    // column. A hidden box one em wide in the prose reports the change.
+    const prose = document.querySelector(".prayer");
+    if (prose && typeof ResizeObserver === "function") {
+        const em = document.createElement("span");
+        em.setAttribute("aria-hidden", "true");
+        em.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;width:1em;height:0";
+        prose.appendChild(em);
+        let size = em.getBoundingClientRect().width;
+        new ResizeObserver(() => {
+            const now = em.getBoundingClientRect().width;
+            if (Math.abs(now - size) < 0.01) return;
+            size = now;
+            rerun();
+        }).observe(em);
+    }
+    // Not every browser sends beforeprint, so the print media query is
+    // watched as well.
+    const toPaper = () => { printing = true; clearTimeout(pending); release(); };
+    const toScreen = () => { printing = false; rerun(); };
+    addEventListener("beforeprint", toPaper);
+    addEventListener("afterprint", toScreen);
+    if (print.addEventListener) print.addEventListener("change", (e) => (e.matches ? toPaper() : toScreen()));
 }

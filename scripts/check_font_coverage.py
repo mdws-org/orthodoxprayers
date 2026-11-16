@@ -25,7 +25,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parent.parent
 FACES = ["fonts/ebgaramond-var.woff2", "fonts/ebgaramond-italic-var.woff2"]
-EXEMPT = re.compile(r'<div class="(?:head-cross|finis)"[^>]*>[^<]*</div>')
+EXEMPT = re.compile(r'<div class="(?:head-cross|finis)"[^>]*>(?:<span aria-hidden="true">)?[^<]*(?:</span>)?</div>')
 STRIP = re.compile(r"<(script|style|noscript)\b[^>]*>.*?</\1>|<!--.*?-->", re.S)
 ATTR = re.compile(r'\b(?:alt|title|aria-label)="([^"]*)"')
 
