@@ -1,7 +1,7 @@
 // Fails the build when the justified prayer prose comes out loose, changes
-// the text, or runs off the column; when a word that justify-words.js
-// protects is divided; and when a page capitalises a word that file does not
-// list.
+// the text, runs off the column, or is not set again after the text size
+// changes; when a word that justify-words.js protects is divided or has
+// break points; and when a page capitalises a word that file does not list.
 //
 // Serves the repository on a local port, opens every page that has prayer
 // prose in WebKit at a phone width and a wide one, lets justify.js set the
@@ -104,25 +104,45 @@ function measure() {
     return out;
 }
 
+// Runs in the page: how many prose paragraphs have text past their right
+// edge. Hanging punctuation sits outside the column by design, by less than
+// one em; lines set for another text size run out by several.
+function pastColumn() {
+    const out = { paragraphs: 0, worst: 0, wide: document.documentElement.scrollWidth > innerWidth + 1 };
+    for (const p of document.querySelectorAll(".prayer p")) {
+        const edge = p.getBoundingClientRect().right, range = document.createRange();
+        range.selectNodeContents(p);
+        const over = Math.max(0, ...[...range.getClientRects()].filter((rc) => rc.width > 0.5).map((rc) => rc.right - edge));
+        if (over > parseFloat(getComputedStyle(p).fontSize)) { out.paragraphs++; out.worst = Math.max(out.worst, Math.round(over)); }
+    }
+    return out;
+}
+
 const failures = [];
 
 // Every word a page capitalises away from a sentence start, six letters or
 // longer, must be filed in justify-words.js as protected or as free to divide.
-const { PROTECTED, MAY_DIVIDE } = await import(join(ROOT, "justify-words.js"));
+const { PROTECTED, MAY_DIVIDE, BREAKS } = await import(join(ROOT, "justify-words.js"));
 const unfiled = new Map();
 for (const path of pages) {
     const html = readFileSync(join(ROOT, path, "index.html"), "utf8");
     for (const para of html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)) {
         // Words only: the markup between them is dropped by splitting on it.
-        const text = para[1].split(/<[^>]*>/).join("").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ");
-        for (const m of text.matchAll(/(\S+)\s([A-Z][a-z]{5,})/g)) {
-            if (/[.!?:;]["'\u201d\u2019)]?$/.test(m[1])) continue;
-            const word = m[2].toLowerCase();
+        const words = para[1].split(/<[^>]*>/).join("").replace(/&[a-z]+;/g, " ").trim().split(/\s+/);
+        // Each word is judged by the one before it, so a run of capitalised
+        // words ("Holy Birthgiver of God") has every member looked at.
+        for (let i = 1; i < words.length; i++) {
+            const m = /^[A-Z][a-z]{5,}/.exec(words[i]);
+            if (!m || /[.!?:;]["'\u201d\u2019)]?$/.test(words[i - 1])) continue;
+            const word = m[0].toLowerCase();
             if (!PROTECTED.has(word) && !MAY_DIVIDE.has(word) && !unfiled.has(word)) unfiled.set(word, path);
         }
     }
 }
 for (const [word, path] of unfiled) failures.push(`${path}: "${word}" is capitalised and is in neither list of justify-words.js`);
+// justify.js tests protection first, so hand-set break points on a word
+// that is not free to divide would never be used.
+for (const word of Object.keys(BREAKS)) if (!MAY_DIVIDE.has(word) || PROTECTED.has(word)) failures.push(`justify-words.js: "${word}" has break points but is not in MAY_DIVIDE alone`);
 
 const pct = (n, d) => (d ? (100 * n) / d : 0);
 for (const width of WIDTHS) {
@@ -145,18 +165,28 @@ for (const width of WIDTHS) {
         page.on("console", (m) => { if (m.type() === "error" || /justify/.test(m.text())) said.push(m.text()); });
         page.on("requestfailed", (r) => said.push(`request failed: ${r.url()}`));
         await page.goto(base + path + "?justify=debug", { waitUntil: "load" });
-        let set = true;
-        if (off.paragraphs) {
-            await page.waitForFunction(() => document.documentElement.dataset.justifySet, null, { timeout: 30000 }).catch(() => { set = false; });
-        }
+        // justify.js marks the page when the lines are set, or records that
+        // it gave up waiting for the library.
+        const finished = (timeout = 30000) => page.waitForFunction(() => document.documentElement.dataset.justifySet || document.documentElement.dataset.justifyStage === "timed out", null, { timeout })
+            .then(() => page.evaluate(() => !!document.documentElement.dataset.justifySet), () => false);
+        const set = off.paragraphs ? await finished() : true;
         const stalledAt = set ? "" : await page.evaluate(() => document.documentElement.dataset.justifyStage || "before the script ran");
         await page.waitForTimeout(100);
         const on = await page.evaluate(measure);
+        // A reader who enlarges the text after the lines are set must get
+        // them set again for the new size, inside the column.
+        let larger = null;
+        if (set && on.justified && width < 600) {
+            await page.evaluate(() => { delete document.documentElement.dataset.justifySet; document.documentElement.style.fontSize = "125%"; });
+            larger = { set: await finished(10000), ...(await page.evaluate(pastColumn)) };
+        }
         await page.close();
 
         const where = `${path} at ${width}px`;
         if (errors.length) failures.push(`${where}: script error: ${errors[0]}`);
-        if (!set) failures.push(`${where}: the script did not finish setting the lines within 30 seconds, stopped at "${stalledAt}"${said.length ? " (" + said.slice(0, 3).join("; ") + ")" : ""}`);
+        if (!set) failures.push(`${where}: the script did not finish setting the lines, stopped at "${stalledAt}"${said.length ? " (" + said.slice(0, 3).join("; ") + ")" : ""}`);
+        if (larger && !larger.set) failures.push(`${where}: the lines were not set again after the text size changed`);
+        if (larger && (larger.paragraphs || larger.wide)) failures.push(`${where}: after the text size changed, ${larger.paragraphs} paragraphs run past the column, by up to ${larger.worst}px`);
         if (on.wide) failures.push(`${where}: the page is wider than the window`);
         if (on.text.join("\n") !== off.text.join("\n")) failures.push(`${where}: the prayer text differs once the lines are set`);
         for (const word of on.divided) if (PROTECTED.has(word.replace("-", "").toLowerCase())) failures.push(`${where}: the protected word "${word}" is divided`);
