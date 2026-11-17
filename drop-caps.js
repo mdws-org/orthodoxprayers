@@ -38,21 +38,38 @@ export const FIT = {
 export const ONE_LETTER_LEAD = 0.16;
 
 // BETA ONLY: the fit measured against the printed book (St. Tikhon's morning
-// and evening prayers), for the thirteen capitals the site opens a prayer
-// with. Line 1 runs in to the capital at the book's distance, so a lead may
-// be negative; the site's own engine sets such a line, the library does not.
+// and evening prayers), for all twenty-six capitals. Line 1 runs in to the
+// capital at the book's distance, so a lead may be negative; the site's own
+// engine sets such a line, the library does not. Line 2 stands off the
+// capital's rightmost ink below line 1's baseline (the widest point of a
+// round letter) by the book's distance. Letters the book does not use are
+// fitted after the nearest shape; F, P and T keep line 2 under the arm or
+// bowl.
 export const FIT_BOOK = {
-    A: [0.0785, -0.881],
-    B: [0.0114, -0.030],
-    C: [0.0113, -0.056],
-    E: [0.0349, -0.051],
-    G: [-0.0205, -0.043],
-    H: [-0.0150, -0.109],
-    I: [0.0395, -0.220],
-    L: [0.0859, -1.185],
-    O: [-0.0162, 0.074],
-    P: [-0.0710, 0.380],
-    R: [0.0202, -0.596],
-    T: [-0.0490, 0.230],
-    U: [-0.1035, 0.294],
+    A: [0.1209, -1.028],
+    B: [0.0196, -0.049],
+    C: [-0.0223, 0.065],
+    D: [0.0235, 0.014],
+    E: [0.0355, -0.051],
+    F: [-0.0410, 0.088],
+    G: [0.0034, -0.117],
+    H: [-0.0029, -0.144],
+    I: [0.0192, -0.237],
+    J: [-0.0772, 0.101],
+    K: [0.0458, -0.459],
+    L: [0.0830, -1.177],
+    M: [-0.0110, -0.205],
+    N: [-0.0775, 0.089],
+    O: [0.0185, -0.058],
+    P: [-0.0710, 0.373],
+    Q: [0.0279, -0.190],
+    R: [0.0420, -0.659],
+    S: [0.0141, -0.093],
+    T: [-0.0490, 0.231],
+    U: [-0.0685, 0.168],
+    V: [-0.0525, 0.026],
+    W: [-0.0399, 0.026],
+    X: [0.0280, -0.285],
+    Y: [-0.0215, 0.026],
+    Z: [0.0322, -0.080],
 };

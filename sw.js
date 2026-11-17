@@ -3,7 +3,7 @@
 // tbm releases are deliberate, so a manual version string is fine.
 const VERSION = "prayers-v61";
 // BETA ONLY: bumped with each change on the beta branch; main has no such line.
-const BETA = "-beta1";
+const BETA = "-beta2";
 const BASE = "/";
 const ASSETS = [
     BASE,
