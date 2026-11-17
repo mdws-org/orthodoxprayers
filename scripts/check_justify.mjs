@@ -1,6 +1,7 @@
 // Fails the build when the justified prayer prose comes out loose, changes
 // the text, runs off the column, or is not set again after the text size
-// changes; when a speaker's response is not set as one; when a word that
+// changes; when a speaker's response is not set as one; when the leaf that
+// closes an optional passage leaves its last line; when a word that
 // justify-words.js protects is divided or has break points; and when a page
 // capitalises a word that file does not list.
 //
@@ -42,7 +43,25 @@ const browser = await webkit.launch({ headless: true, ...(process.env.WEBKIT_PAT
 // a gap is the distance between neighbouring words on a line, in units of
 // the font's own space advance.
 function measure() {
-    const out = { lines: 0, over2: 0, over25: 0, justified: 0, paragraphs: 0, wide: document.documentElement.scrollWidth > innerWidth + 1, text: [], divided: [], labelled: 0, unmarked: 0 };
+    const out = { lines: 0, over2: 0, over25: 0, justified: 0, paragraphs: 0, wide: document.documentElement.scrollWidth > innerWidth + 1, text: [], divided: [], labelled: 0, unmarked: 0, leaves: 0, strayLeaves: 0 };
+    // The leaf that closes an optional passage stands after the last word,
+    // on its line and inside the column.
+    for (const leaf of document.querySelectorAll(".prayer p .leaf")) {
+        const box = leaf.getBoundingClientRect();
+        if (!box.width) continue;
+        out.leaves++;
+        const p = leaf.closest("p"), texts = document.createTreeWalker(p, NodeFilter.SHOW_TEXT);
+        let last = null;
+        while (texts.nextNode()) {
+            if (!texts.currentNode.data.trim()) continue;
+            const r = document.createRange();
+            r.selectNodeContents(texts.currentNode);
+            const rs = [...r.getClientRects()].filter((rc) => rc.width > 0.5);
+            if (rs.length) last = rs[rs.length - 1];
+        }
+        const sameLine = last && Math.abs((box.top + box.bottom) - (last.top + last.bottom)) / 2 < box.height;
+        if (!sameLine || box.left < last.right - 1 || box.right > p.getBoundingClientRect().right + 1) out.strayLeaves++;
+    }
     for (const p of document.querySelectorAll(".prayer p")) {
         // A paragraph that opens with a speaker's label is set as a response.
         const label = p.firstElementChild;
@@ -52,9 +71,11 @@ function measure() {
             const above = p.classList.contains("response-long") && p.querySelector(":scope > br.after-label");
             if (!beside && !above) out.unmarked++;
         }
-        // The library ties the opening word with a no-break space; nothing else
-        // in the text may change.
-        out.text.push(p.textContent.replace(/\u00a0/g, " "));
+        // The library ties the opening word with a no-break space, and stands
+        // a word joiner (U+2060, no width) where it places the leaf that
+        // ends a paragraph; nothing else in the text may change.
+        const said = p.textContent.replace(/\u00a0/g, " ");
+        out.text.push(p.querySelector(".leaf") ? said.replace(/\u2060$/, "") : said);
         const cs = getComputedStyle(p);
         const set = !!p.querySelector('[class*="justif"]');
         if (cs.textAlign !== "justify" && !set) continue;
@@ -197,6 +218,7 @@ for (const width of WIDTHS) {
         if (larger && !larger.set) failures.push(`${where}: the lines were not set again after the text size changed`);
         if (larger && (larger.paragraphs || larger.wide)) failures.push(`${where}: after the text size changed, ${larger.paragraphs} paragraphs run past the column, by up to ${larger.worst}px`);
         if (on.wide) failures.push(`${where}: the page is wider than the window`);
+        if (on.strayLeaves) failures.push(`${where}: ${on.strayLeaves} of ${on.leaves} closing leaves are off the last line of their passage`);
         if (set && on.justified && on.unmarked) failures.push(`${where}: ${on.unmarked} of ${on.labelled} paragraphs that open with a speaker's label are set neither beside the label nor under it`);
         if (on.text.join("\n") !== off.text.join("\n")) failures.push(`${where}: the prayer text differs once the lines are set`);
         for (const word of on.divided) if (PROTECTED.has(word.replace("-", "").toLowerCase())) failures.push(`${where}: the protected word "${word}" is divided`);

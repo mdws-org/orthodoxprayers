@@ -89,7 +89,9 @@ South. © 2004–2005 St Seraphim Orthodox Cathedral.
 The ornament bars come from the Orthodox Illustration Project. The small cross at the head
 and foot of each page (`art/icons/cross-pattee.svg`) is the U+2720 glyph of the
 Ponomar font, © The Ponomar Project Authors, under the SIL Open Font License
-1.1 (`art/icons/OFL-Ponomar.txt`).
+1.1 (`art/icons/OFL-Ponomar.txt`). The leaf that brackets an optional passage
+(`art/icons/leaf.svg`) is the U+2766 glyph of EB Garamond, © The EB Garamond
+Project Authors, under the same license.
 
 ## License
 
