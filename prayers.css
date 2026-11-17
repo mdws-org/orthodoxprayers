@@ -214,6 +214,24 @@ h1 {
     hyphens: auto;
     margin-bottom: 1em;
 }
+/* Paragraphs that follow one another are set as the printed prayer books
+   set them: no space between, the first line of each after the first
+   indented. A heading, rubric, label or verse block still opens with its
+   own space. A canon's refrain keeps the space above it and the troparion
+   under it starts at the margin, so each troparion stays a unit. The print
+   stylesheet has its own rules. */
+@media screen {
+    @supports selector(:has(+ p)) {
+        .prayer > p:not(.refrain):has(+ p:not(.refrain)) { margin-bottom: 0; }
+        .prayer > p + p { text-indent: 1.25em; }
+        .prayer > p + p.refrain,
+        .prayer > p.refrain + p,
+        .prayer > p + p:has(> .speaker:first-child) { text-indent: 0; }
+        /* A short opening paragraph ends beside its initial; the next one
+           starts below it. */
+        .prayer > p.opening + p { clear: left; }
+    }
+}
 /* Small red cross above the section title, as the printed books head their
    pages, and again at the close (.finis). EB Garamond has no U+2720, so the
    character fell back to a system symbol font; the cross is drawn instead
@@ -227,12 +245,12 @@ h1 {
     margin-left: auto;
     margin-right: auto;
     background-color: currentColor;
-    -webkit-mask: url(art/icons/byzantine-cross-1.svg) center / contain no-repeat;
-    mask: url(art/icons/byzantine-cross-1.svg) center / contain no-repeat;
+    -webkit-mask: url(art/icons/cross-pattee.svg) center / contain no-repeat;
+    mask: url(art/icons/cross-pattee.svg) center / contain no-repeat;
 }
 .head-cross {
-    width: 1.05rem;
-    height: 1.05rem;
+    width: 1.2rem;
+    height: 1.2rem;
     margin-bottom: 0.8rem;
 }
 @supports not ((mask: url(#m)) or (-webkit-mask: url(#m))) {
@@ -244,14 +262,23 @@ h1 {
 .prayer p.opening .runin {
     font-variant: small-caps;
     letter-spacing: 0.05em;
+    padding-left: var(--cap-lead, 0em);
 }
+/* The word space after a one-letter opening word ("O Lord"): kept in the
+   text, given no width, so line 1 starts at the edge --cap-lead sets and
+   not a word space further right than line 2. */
+.prayer p.opening .runin-gap { font-size: 0; }
 
 .prayer p.opening::first-letter {
     color: var(--rubric);
     font-size: 3.4em;
     float: left;
     line-height: 0.82;
-    padding: 0.06em 0.12em 0 0;
+    padding: 0.06em 0 0 0;
+    /* How far the lines beside the capital stand from its box. markRunIn
+       sets --cap-fit and --cap-lead for the letter from drop-caps.js, so the
+       text sits the same distance from an O's curve as from a T's arm. */
+    margin-right: var(--cap-fit, 0.04em);
     font-weight: 500;
 }
 
@@ -371,24 +398,32 @@ footer a:active { color: var(--rubric); }
    shrink with the page -- if anything it runs a hair larger. Only the
    heading scales down.
 
-   Prose is set ragged right here. At the ~40-character measure a phone
-   leaves, justification stretched a word space past twice its width on one
-   line in six, with hyphenation on (measured 2026-11-08, Safari and Chrome).
-   Hyphenation stays on to keep the rag shallow, with at least three letters
-   on each side of a break. The limit lives here and not on the justified
-   desktop text, where it measurably widened word spaces.
-   scripts/check_phone_rag.py fails the build if phone prose is justified
-   again. */
+   Prose is justified here as on a wide screen, as the printed prayer books
+   set it. justify.js sets each paragraph's lines; the rules below are what a
+   phone shows when that script does not run. At the ~40-character measure
+   the browser's own justification stretched a word space past twice its
+   width on one line in five, so the word space starts 0.05em tighter (one
+   line in ten, measured 2026-11-13 in WebKit), closing punctuation may hang
+   in the margin, and no more than two lines in a row end in a hyphen. A
+   break keeps at least three letters on each side; that limit lives here
+   and not on the wide column, where it measurably widened word spaces.
+   Verse and petitions are short lines set ragged and keep the normal
+   space. scripts/check_justify.mjs fails the build if the set lines come
+   out loose. */
 @media (max-width: 600px) {
     :root { --text-size: 1.2rem; }
     main.page { padding: 1.9rem 1.5rem 1.8rem; }
     h1 { font-size: 1.6rem; }
     .prayer p {
-        text-align: left;
+        word-spacing: -0.05em;
+        hanging-punctuation: first allow-end;
         -webkit-hyphenate-limit-before: 3;
         -webkit-hyphenate-limit-after: 3;
         hyphenate-limit-chars: 6 3 3;
+        -webkit-hyphenate-limit-lines: 2;
     }
+    .prayer .prayer.indented p,
+    .prayer .verse p { word-spacing: normal; }
     .ornament { margin-bottom: 1.6rem; }
 }
 
@@ -437,11 +472,17 @@ footer a:active { color: var(--rubric); }
 .notice { max-width: 34em; margin-left: auto; margin-right: auto; }
 
 
-.rubric { color: var(--rubric); font-style: italic; font-variant: normal; letter-spacing: 0; }
+/* A direction is red roman, as the current service books set it; italic is
+   kept for a note and for a passage that explains a service (marked by
+   scripts/set_rubrics.py). A word the source sets in capitals, and a role in
+   a rubric that cues a speaker, is in small caps: the text keeps its
+   capitals and is only shown smaller. */
+.rubric { color: var(--rubric); font-style: normal; font-variant: normal; letter-spacing: 0; }
+.rubric .sc, .rubric-line .sc { text-transform: lowercase; font-variant-caps: small-caps; letter-spacing: 0.05em; }
 
 /* Book-style paragraphing: first-line indents, no inter-paragraph space --
    matches the printed sources that set prayers as indented paragraphs. */
-.prayer.indented p { margin-bottom: 0; text-indent: 1.5em; }
+.prayer.indented p { margin-bottom: 0; text-indent: 1.25em; }
 .prayer.indented p.opening { text-indent: 0; }
 /* An indented run inside a spaced prayer (Chrysostom's petitions): its own
    lines sit tight, but the block keeps the paragraph gap after it. */
@@ -452,7 +493,8 @@ footer a:active { color: var(--rubric); }
 
 /* Who says each part of a service set for reader and choir (the Typika):
    small caps in rubric red, so the words to be said stay in ink. Inline at
-   the head of a paragraph; a line of its own above a sung text. */
+   the head of a paragraph, where justify.js sets it in a column or on a
+   line above; a line of its own above a sung text. */
 .prayer .speaker { font-variant: small-caps; color: var(--rubric); letter-spacing: 0.06em; }
 .prayer div.speaker { font-size: var(--text-size); margin-bottom: 0.35em; }
 
@@ -537,7 +579,30 @@ button.gloss {
    troparion it introduces, so the eye can find its place in a long ode. */
 .prayer p.refrain { font-style: italic; margin-bottom: 0.3em; }
 
-.rubric-line { color: var(--rubric); font-style: italic; font-size: var(--text-size); margin: 1.4rem 0 0.9rem; }
+.rubric-line { color: var(--rubric); font-size: var(--text-size); margin: 1.4rem 0 0.9rem; }
+.rubric-line[data-rubric] { font-style: italic; }
+
+/* A passage said only in some cases (set_rubrics.py marks its opening
+   rubric and the end of its last paragraph) stands between two red leaves,
+   as the service books bracket it. The leaf is EB Garamond's own U+2766,
+   which the served subset does not carry, drawn as a mask in the rubric
+   color; no character is added to the text. The closing leaf is an empty
+   inline-block element and not generated content: justify.js's library
+   does not set a paragraph that ends in generated content. */
+.rubric-line[data-leaf="open"]::before,
+.prayer p .leaf {
+    display: inline-block;
+    width: 0.5em;
+    height: 0.9em;
+    vertical-align: -0.06em;
+    background-color: var(--rubric);
+    -webkit-mask: url(art/icons/leaf.svg) center / contain no-repeat;
+    mask: url(art/icons/leaf.svg) center / contain no-repeat;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.rubric-line[data-leaf="open"]::before { content: ""; margin-right: 0.3em; }
+.prayer p .leaf { margin-left: 0.3em; }
 
 /* The prostration after each petition of the Commemoration. Centered and set
    tighter than a rubric-line: it recurs eighteen times, and at rubric-line
@@ -577,6 +642,31 @@ footer a::after,
 /* Hover only where a pointer can hover: on a touch screen a tap would leave
    the hover color stuck. Each rule has an :active twin beside its element,
    so a tap shows the same mark while the finger is down. */
+/* While justify.js is setting the lines it measures the font's own word
+   space and hangs punctuation itself. */
+:root[data-justify="on"] .prayer p { word-spacing: normal; hanging-punctuation: none; }
+/* A speaker's response, marked by justify.js. A short one is set beside
+   its label: the label in a column as wide as the page's widest label
+   (--label-column), the words ragged beside it, the unlabelled paragraphs
+   that continue it under the words. The label's negative margin takes up
+   the word space that follows it. A long one has its label on a line above
+   (justify.js adds the break) and is justified prose. */
+:root[data-justify="on"] .prayer p:is(.response, .response-more) {
+    text-align: left;
+    hyphens: manual;
+    padding-left: var(--label-column);
+    text-indent: 0;
+}
+:root[data-justify="on"] .prayer p.response { text-indent: calc(-1 * var(--label-column)); }
+:root[data-justify="on"] .prayer p.response > .speaker {
+    display: inline-block;
+    width: var(--label-column);
+    margin-right: -0.22em;
+    text-indent: 0;
+}
+:root[data-justify="on"] .prayer p:is(.response, .response-long) { margin-top: 1em; }
+:root[data-justify="on"] .prayer p.response-more { margin-top: 0.3em; }
+
 @media (hover: hover) and (pointer: fine) {
     header a:hover { color: var(--rubric); }
     #theme:hover { color: var(--rubric); }
@@ -661,9 +751,26 @@ footer a::after,
     .head-cross,
     .finis { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .head-cross { width: 12pt; height: 12pt; }
-    .prayer p { font-size: 13pt; margin: 0; }
+    /* A divided word keeps three letters on each side, as on the screen.
+       Browsers count the punctuation after a word as its letters ("mer-cy,"
+       passes a limit of three), so the limit after the break is four. */
+    .prayer p {
+        font-size: 13pt;
+        margin: 0;
+        -webkit-hyphenate-limit-before: 3;
+        -webkit-hyphenate-limit-after: 4;
+        hyphenate-limit-chars: 6 3 4;
+    }
     .prayer > p + p { text-indent: 1.25em; }
     .prayer > p + p:is(.refrain, .glory, .prostration, .inscription) { text-indent: 0; }
+    /* A response under a speaker's label starts at the margin, where the
+       label reads as the start of the line. */
+    .prayer > p + p:has(> .speaker:first-child) { text-indent: 0; }
+    /* The initial stands two lines deep. At the print leading two lines are
+       2.6em, so the capital is smaller than on the screen and its box
+       shorter: at the screen's size the box is deeper than two print lines
+       and a third line stands beside it. */
+    .prayer p.opening::first-letter { font-size: 3em; line-height: 0.78; }
     .prayer p.opening + * { clear: left; }
     .psalm-head { font-size: 14pt; margin: 16pt 0 3pt; }
     .canon-head { font-size: 13pt; margin: 12pt 0 4pt; }

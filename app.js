@@ -1,4 +1,5 @@
 // Theme toggle, install hint, run-in, masthead. ES module, deferred by default.
+import { FIT, ONE_LETTER_LEAD } from "./drop-caps.js";
 
 /* ---- Theme: one button toggling day <-> night ------------------------
    There is no "system" position on the button. A visitor with no stored
@@ -102,11 +103,25 @@ function markRunIn(p) {
     if (runEnd <= capEnd) return;
     const span = document.createElement("span");
     span.className = "runin";
-    span.textContent = text.slice(capEnd, runEnd);
+    // A one-letter opening word: its word space goes in a span of its own,
+    // which the stylesheet gives no width.
+    const space = m[2].length === 1 && m[4] ? m[3] : "";
+    span.textContent = text.slice(capEnd + space.length, runEnd);
     const rest = document.createTextNode(text.slice(runEnd));
     node.nodeValue = text.slice(0, capEnd);
     p.insertBefore(span, node.nextSibling);
     p.insertBefore(rest, span.nextSibling);
+    if (space) {
+        const gap = document.createElement("span");
+        gap.className = "runin-gap";
+        gap.textContent = space;
+        p.insertBefore(gap, span);
+    }
+    const fit = FIT[text[capEnd - 1]];
+    if (fit) {
+        p.style.setProperty("--cap-fit", fit[0] + "em");
+        p.style.setProperty("--cap-lead", fit[1] + (space ? ONE_LETTER_LEAD : 0) + "em");
+    }
 }
 document.querySelectorAll(".prayer p.opening").forEach(markRunIn);
 
@@ -152,6 +167,10 @@ if (wink) {
     ];
     wink.src = "/art/icons/" + ICONS[Math.floor(Math.random() * ICONS.length)] + ".svg";
 }
+
+/* ---- Justified prose -------------------------------------------------- */
+// After the run-in above, which changes the opening paragraph's text nodes.
+import("./justify.js").then((m) => m.default()).catch(() => {});
 
 /* ---- PWA ------------------------------------------------------------- */
 if ("serviceWorker" in navigator) {

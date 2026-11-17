@@ -7,6 +7,8 @@
 2. add_glossary adds the tap-to-read notes to those pages and rewrites the
    notes on every other page that has them.
 3. add_page_nav adds the previous/next line through the Communion pages.
+4. set_rubrics marks notes, prefaces and small caps in the rubrics of every
+   page.
 
 Run from anywhere: python3 scripts/build_pages.py. Then run the checks
 (check_text_*.py, check_glossary.py, check_precache.py) and raise VERSION in
@@ -23,8 +25,9 @@ import pages_communion  # noqa: E402
 import pages_compline_canons  # noqa: E402
 import pages_evening  # noqa: E402
 import pages_typika  # noqa: E402
+import set_rubrics  # noqa: E402
 
 if __name__ == "__main__":
     sys.argv = sys.argv[:1]
-    for step in (pages_evening, pages_communion, pages_compline_canons, pages_typika, add_glossary, add_page_nav):
+    for step in (pages_evening, pages_communion, pages_compline_canons, pages_typika, add_glossary, add_page_nav, set_rubrics):
         step.main()
