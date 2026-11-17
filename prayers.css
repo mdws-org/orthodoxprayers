@@ -582,6 +582,28 @@ button.gloss {
 .rubric-line { color: var(--rubric); font-size: var(--text-size); margin: 1.4rem 0 0.9rem; }
 .rubric-line[data-rubric] { font-style: italic; }
 
+/* A passage said only in some cases (set_rubrics.py marks its opening
+   rubric and the end of its last paragraph) stands between two red leaves,
+   as the service books bracket it. The leaf is EB Garamond's own U+2766,
+   which the served subset does not carry, drawn as a mask in the rubric
+   color; no character is added to the text. The closing leaf is an empty
+   inline-block element and not generated content: justify.js's library
+   does not set a paragraph that ends in generated content. */
+.rubric-line[data-leaf="open"]::before,
+.prayer p .leaf {
+    display: inline-block;
+    width: 0.5em;
+    height: 0.9em;
+    vertical-align: -0.06em;
+    background-color: var(--rubric);
+    -webkit-mask: url(art/icons/leaf.svg) center / contain no-repeat;
+    mask: url(art/icons/leaf.svg) center / contain no-repeat;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.rubric-line[data-leaf="open"]::before { content: ""; margin-right: 0.3em; }
+.prayer p .leaf { margin-left: 0.3em; }
+
 /* The prostration after each petition of the Commemoration. Centered and set
    tighter than a rubric-line: it recurs eighteen times, and at rubric-line
    spacing the page would drift apart into a list. */
