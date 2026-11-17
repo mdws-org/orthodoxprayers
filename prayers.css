@@ -214,6 +214,24 @@ h1 {
     hyphens: auto;
     margin-bottom: 1em;
 }
+/* Paragraphs that follow one another are set as the printed prayer books
+   set them: no space between, the first line of each after the first
+   indented. A heading, rubric, label or verse block still opens with its
+   own space. A canon's refrain keeps the space above it and the troparion
+   under it starts at the margin, so each troparion stays a unit. The print
+   stylesheet has its own rules. */
+@media screen {
+    @supports selector(:has(+ p)) {
+        .prayer > p:not(.refrain):has(+ p:not(.refrain)) { margin-bottom: 0; }
+        .prayer > p + p { text-indent: 1.25em; }
+        .prayer > p + p.refrain,
+        .prayer > p.refrain + p,
+        .prayer > p + p:has(> .speaker:first-child) { text-indent: 0; }
+        /* A short opening paragraph ends beside its initial; the next one
+           starts below it. */
+        .prayer > p.opening + p { clear: left; }
+    }
+}
 /* Small red cross above the section title, as the printed books head their
    pages, and again at the close (.finis). EB Garamond has no U+2720, so the
    character fell back to a system symbol font; the cross is drawn instead
@@ -464,7 +482,7 @@ footer a:active { color: var(--rubric); }
 
 /* Book-style paragraphing: first-line indents, no inter-paragraph space --
    matches the printed sources that set prayers as indented paragraphs. */
-.prayer.indented p { margin-bottom: 0; text-indent: 1.5em; }
+.prayer.indented p { margin-bottom: 0; text-indent: 1.25em; }
 .prayer.indented p.opening { text-indent: 0; }
 /* An indented run inside a spaced prayer (Chrysostom's petitions): its own
    lines sit tight, but the block keeps the paragraph gap after it. */
