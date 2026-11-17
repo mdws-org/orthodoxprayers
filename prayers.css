@@ -493,7 +493,8 @@ footer a:active { color: var(--rubric); }
 
 /* Who says each part of a service set for reader and choir (the Typika):
    small caps in rubric red, so the words to be said stay in ink. Inline at
-   the head of a paragraph; a line of its own above a sung text. */
+   the head of a paragraph, where justify.js sets it in a column or on a
+   line above; a line of its own above a sung text. */
 .prayer .speaker { font-variant: small-caps; color: var(--rubric); letter-spacing: 0.06em; }
 .prayer div.speaker { font-size: var(--text-size); margin-bottom: 0.35em; }
 
@@ -622,8 +623,27 @@ footer a::after,
 /* While justify.js is setting the lines it measures the font's own word
    space and hangs punctuation itself. */
 :root[data-justify="on"] .prayer p { word-spacing: normal; hanging-punctuation: none; }
-/* A one- or two-line response under a speaker's label, marked by justify.js. */
-.prayer p.short-response { text-align: left; }
+/* A speaker's response, marked by justify.js. A short one is set beside
+   its label: the label in a column as wide as the page's widest label
+   (--label-column), the words ragged beside it, the unlabelled paragraphs
+   that continue it under the words. The label's negative margin takes up
+   the word space that follows it. A long one has its label on a line above
+   (justify.js adds the break) and is justified prose. */
+:root[data-justify="on"] .prayer p:is(.response, .response-more) {
+    text-align: left;
+    hyphens: manual;
+    padding-left: var(--label-column);
+    text-indent: 0;
+}
+:root[data-justify="on"] .prayer p.response { text-indent: calc(-1 * var(--label-column)); }
+:root[data-justify="on"] .prayer p.response > .speaker {
+    display: inline-block;
+    width: var(--label-column);
+    margin-right: -0.22em;
+    text-indent: 0;
+}
+:root[data-justify="on"] .prayer p:is(.response, .response-long) { margin-top: 1em; }
+:root[data-justify="on"] .prayer p.response-more { margin-top: 0.3em; }
 
 @media (hover: hover) and (pointer: fine) {
     header a:hover { color: var(--rubric); }
