@@ -2,12 +2,15 @@
 //
 // A browser justifies one line at a time and can only widen word spaces; on
 // a phone's forty-character line that leaves one line in five with a gap over
-// twice the font's space. The justif library (vendor/justif, v0.9.2, MIT)
-// chooses the breaks for the whole paragraph, lets a space close to 80% as
-// well as open, and spreads what is left across the letters of the line, so
-// the page reads like the printed prayer books. Paragraphs it cannot set
-// keep the browser's justification from prayers.css, as does every page when
-// this script does not run.
+// twice the font's space. justify-engine.js chooses the breaks for the whole
+// paragraph, lets a space close to 80% as well as open, and spreads what is
+// left across the letters of the line, so the page reads like the printed
+// prayer books. This file decides what is set and when: which paragraphs,
+// which words may divide, and setting again when the column, the text size
+// or the font changes. Paragraphs the engine cannot set keep the browser's
+// justification from prayers.css, as does every page when this script does
+// not run. The hyphenation patterns are the justif library's (vendor/justif,
+// v0.9.2, MIT).
 //
 // ?justify=off turns it off on this device, ?justify=on turns it back on,
 // ?justify=debug reports what was set.
@@ -16,15 +19,6 @@ import { PROTECTED, BREAKS } from "./justify-words.js";
 
 const KEY = "prayers-justify";
 const root = document.documentElement;
-
-// How far the library may go. A word space closes to 80% of the font's own
-// and opens to 150%; letter-spacing may take up 3% of a line's width.
-const OPTIONS = {
-    tracking: { max: 0.03, shrink: 0.03 },
-    spacing: { stretch: 0.5, shrink: 0.2, pull: 0.7, boundaryShrink: 0 },
-    hangingPunctuation: "line-end-only",
-    protrusion: true,
-};
 
 // At least three letters stay on each side of a break. A protected word
 // (justify-words.js) is never divided, and a word with hand-set break points
@@ -51,6 +45,8 @@ function preference() {
 }
 
 let controller = null;
+// Set by start(): runs the lines again after a font that came late.
+let lateFont = null;
 // Counts releases. A run that finds the count changed after waiting has been
 // overtaken by a later run and stops, so two runs never set the same lines.
 let generation = 0;
@@ -59,12 +55,7 @@ function release() {
     generation++;
     if (controller) { controller.destroy(); controller = null; }
     for (const p of document.querySelectorAll(".prayer p:is(.response, .response-more, .response-long)")) p.classList.remove("response", "response-more", "response-long");
-    for (const br of document.querySelectorAll(".prayer br.after-label")) {
-        const p = br.parentNode, held = br.previousSibling;
-        if (held && held.nodeType === Node.TEXT_NODE && held.data === "\u00a0") held.data = " ";
-        br.remove();
-        p.normalize();
-    }
+    for (const br of document.querySelectorAll(".prayer br.after-label")) br.remove();
     root.style.removeProperty("--label-column");
     delete root.dataset.justify;
 }
@@ -99,18 +90,9 @@ function markResponses(paragraphs) {
         const [first, ...more] = group, label = first.firstElementChild;
         if (!short) {
             first.classList.add("response-long");
-            // The library drops an ordinary space beside a line break, which
-            // would join the label to the first word in the page's text. The
-            // space after the label is held as a no-break space, as the
-            // library itself holds the space after an inline label, and
-            // release() puts the ordinary one back.
             const br = document.createElement("br");
             br.className = "after-label";
-            const next = label.nextSibling;
-            if (next && next.nodeType === Node.TEXT_NODE && /^ /.test(next.data)) {
-                next.splitText(1).before(br);
-                next.data = "\u00a0";
-            } else label.after(br);
+            label.after(br);
             continue;
         }
         widest = Math.max(widest, label.getBoundingClientRect().width / parseFloat(getComputedStyle(first).fontSize));
@@ -129,20 +111,25 @@ async function set(debug) {
     if (!all.some((p) => getComputedStyle(p).textAlign === "justify")) return;
     const stage = (name) => { if (debug) root.dataset.justifyStage = name; };
     stage("loading");
-    const [{ justify }, { hyphenateEnUS }] = await Promise.all([
-        import("./vendor/justif/index.js"),
+    const [{ justify, LINE }, { hyphenateEnUS }] = await Promise.all([
+        import("./justify-engine.js"),
         import("./vendor/justif/hyphenate/en-us.js"),
     ]);
     if (mine !== generation) return;
-    // The library sets the lines again when a font arrives, so a font that is
-    // slow or never reports ready does not hold the page on the fallback.
+    // A font that is slow or never reports ready does not hold the page on
+    // the browser's own justification.
     stage("fonts");
-    if (document.fonts) await Promise.race([document.fonts.ready, new Promise((done) => setTimeout(done, 2000))]);
+    if (document.fonts) {
+        const arrived = await Promise.race([document.fonts.ready.then(() => true), new Promise((done) => setTimeout(() => done(false), 2000))]);
+        // Lines set in the fallback font stop short of the column, or run
+        // past it, once the real font is drawn: set them again when it comes.
+        if (!arrived) document.fonts.ready.then(() => { if (lateFont) lateFont(); });
+    }
     if (mine !== generation) return;
     stage("setting");
 
     // prayers.css tightens the word space for the browser's own justification;
-    // this attribute lifts that, so the library measures the font's own space.
+    // this attribute lifts that, so the engine measures the font's own space.
     root.dataset.justify = "on";
     markResponses(all);
     const targets = all.filter((p) => getComputedStyle(p).textAlign === "justify");
@@ -156,10 +143,22 @@ async function set(debug) {
     }
     const skipped = [];
     controller = justify(targets, {
-        ...OPTIONS,
         hyphenate: wordRules(hyphenateEnUS),
         onSkip: debug ? (...why) => skipped.push(why) : undefined,
     });
+    // A line that runs more than an em past its column (hanging punctuation
+    // is less) means the lines were set for other widths than the page has.
+    // The browser's own justification is better than that.
+    const astray = controller.managed.find((p) => {
+        const edge = p.getBoundingClientRect().right + parseFloat(getComputedStyle(p).fontSize);
+        return [...p.querySelectorAll("span." + LINE)].some((line) => line.getBoundingClientRect().right > edge);
+    });
+    if (astray) {
+        release();
+        stage("a line ran past the column");
+        if (debug) console.error("justify: a line ran past the column in", astray);
+        return;
+    }
     if (debug) {
         stage("set");
         const finished = await Promise.race([
@@ -192,16 +191,16 @@ export default function start() {
         clearTimeout(pending);
         pending = setTimeout(run, 200);
     };
-    // Which responses are short depends on the column, so a change of width
-    // starts over. The library follows the width by itself otherwise.
+    // The lines are set for one column width, and which responses are short
+    // depends on it too, so a change of width starts over.
     let width = innerWidth;
     addEventListener("resize", () => {
         if (innerWidth === width) return;
         width = innerWidth;
         rerun();
     });
-    // The library does not notice a change of text size (the reader's browser
-    // setting, a zoom of text only): the lines it set would run past the
+    // Nor does a change of text size (the reader's browser setting, a zoom
+    // of text only) change the window: the lines set would run past the
     // column. A hidden box one em wide in the prose reports the change.
     const prose = document.querySelector(".prayer");
     if (prose && typeof ResizeObserver === "function") {
@@ -217,6 +216,7 @@ export default function start() {
             rerun();
         }).observe(em);
     }
+    lateFont = rerun;
     // Not every browser sends beforeprint, so the print media query is
     // watched as well.
     const toPaper = () => { printing = true; clearTimeout(pending); release(); };
