@@ -1,7 +1,8 @@
 // Fails the build when the justified prayer prose comes out loose, changes
 // the text, runs off the column, or is not set again after the text size
-// changes; when a word that justify-words.js protects is divided or has
-// break points; and when a page capitalises a word that file does not list.
+// changes; when a speaker's response is not set as one; when a word that
+// justify-words.js protects is divided or has break points; and when a page
+// capitalises a word that file does not list.
 //
 // Serves the repository on a local port, opens every page that has prayer
 // prose in WebKit at a phone width and a wide one, lets justify.js set the
@@ -41,8 +42,16 @@ const browser = await webkit.launch({ headless: true, ...(process.env.WEBKIT_PAT
 // a gap is the distance between neighbouring words on a line, in units of
 // the font's own space advance.
 function measure() {
-    const out = { lines: 0, over2: 0, over25: 0, justified: 0, paragraphs: 0, wide: document.documentElement.scrollWidth > innerWidth + 1, text: [], divided: [] };
+    const out = { lines: 0, over2: 0, over25: 0, justified: 0, paragraphs: 0, wide: document.documentElement.scrollWidth > innerWidth + 1, text: [], divided: [], labelled: 0, unmarked: 0 };
     for (const p of document.querySelectorAll(".prayer p")) {
+        // A paragraph that opens with a speaker's label is set as a response.
+        const label = p.firstElementChild;
+        if (label && p.firstChild === label && label.classList.contains("speaker")) {
+            out.labelled++;
+            const beside = p.classList.contains("response") && getComputedStyle(p).textAlign !== "justify" && label.getBoundingClientRect().width > 0;
+            const above = p.classList.contains("response-long") && p.querySelector(":scope > br.after-label");
+            if (!beside && !above) out.unmarked++;
+        }
         // The library ties the opening word with a no-break space; nothing else
         // in the text may change.
         out.text.push(p.textContent.replace(/\u00a0/g, " "));
@@ -188,6 +197,7 @@ for (const width of WIDTHS) {
         if (larger && !larger.set) failures.push(`${where}: the lines were not set again after the text size changed`);
         if (larger && (larger.paragraphs || larger.wide)) failures.push(`${where}: after the text size changed, ${larger.paragraphs} paragraphs run past the column, by up to ${larger.worst}px`);
         if (on.wide) failures.push(`${where}: the page is wider than the window`);
+        if (set && on.justified && on.unmarked) failures.push(`${where}: ${on.unmarked} of ${on.labelled} paragraphs that open with a speaker's label are set neither beside the label nor under it`);
         if (on.text.join("\n") !== off.text.join("\n")) failures.push(`${where}: the prayer text differs once the lines are set`);
         for (const word of on.divided) if (PROTECTED.has(word.replace("-", "").toLowerCase())) failures.push(`${where}: the protected word "${word}" is divided`);
         if (width < 600 && off.paragraphs === 0 && on.paragraphs > 0) failures.push(`${where}: with the script off, phone prose is not justified by the stylesheet`);
