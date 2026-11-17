@@ -58,21 +58,67 @@ let generation = 0;
 function release() {
     generation++;
     if (controller) { controller.destroy(); controller = null; }
-    for (const p of document.querySelectorAll(".prayer p.short-response")) p.classList.remove("short-response");
+    for (const p of document.querySelectorAll(".prayer p:is(.response, .response-more, .response-long)")) p.classList.remove("response", "response-more", "response-long");
+    for (const br of document.querySelectorAll(".prayer br.after-label")) {
+        const p = br.parentNode, held = br.previousSibling;
+        if (held && held.nodeType === Node.TEXT_NODE && held.data === "\u00a0") held.data = " ";
+        br.remove();
+        p.normalize();
+    }
+    root.style.removeProperty("--label-column");
     delete root.dataset.justify;
 }
 
-// A response of one or two lines under a speaker's label ("Choir: Holy God,
-// Holy Mighty, Holy Immortal, have mercy on us.") is left ragged, as verse
-// and petitions are: its first line is a row of short words that cannot be
-// divided, and justified it is stretched across the column.
-function markShortResponses(paragraphs) {
-    const short = paragraphs.filter((p) => {
+// The most lines a response may run to and still be set beside its label.
+const RESPONSE_LINES = 3;
+
+// What a speaker says ("Choir: Lord, have mercy." and the unlabelled
+// paragraphs after it) is set as the service books set a dialogue: the label
+// in a column of its own, the words beside it, ragged. Justified, a short
+// response is a row of words stretched across the column. A response longer
+// than RESPONSE_LINES at the full measure is a prayer: its label stands on a
+// line above it and the text is justified like any other. Lines are counted
+// as rendered, so the same response may be short on a wide screen and long
+// on a phone.
+function markResponses(paragraphs) {
+    const labelled = paragraphs.filter((p) => {
         const label = p.firstElementChild;
-        if (!label || p.firstChild !== label || !label.classList.contains("speaker")) return false;
-        return p.getBoundingClientRect().height <= 2.5 * parseFloat(getComputedStyle(p).lineHeight);
+        return label && p.firstChild === label && label.classList.contains("speaker");
     });
-    for (const p of short) p.classList.add("short-response");
+    const mine = new Set(labelled);
+    const lines = (p) => Math.round(p.getBoundingClientRect().height / parseFloat(getComputedStyle(p).lineHeight));
+    // Measured for every response before any is changed: marking one moves
+    // nothing above it, but the counts must all be of the same layout.
+    const groups = labelled.map((p) => {
+        const group = [p];
+        for (let n = p.nextElementSibling; n && n.tagName === "P" && !n.className && !mine.has(n); n = n.nextElementSibling) group.push(n);
+        return { group, short: group.reduce((sum, g) => sum + lines(g), 0) <= RESPONSE_LINES };
+    });
+    let widest = 0;
+    for (const { group, short } of groups) {
+        const [first, ...more] = group, label = first.firstElementChild;
+        if (!short) {
+            first.classList.add("response-long");
+            // The library drops an ordinary space beside a line break, which
+            // would join the label to the first word in the page's text. The
+            // space after the label is held as a no-break space, as the
+            // library itself holds the space after an inline label, and
+            // release() puts the ordinary one back.
+            const br = document.createElement("br");
+            br.className = "after-label";
+            const next = label.nextSibling;
+            if (next && next.nodeType === Node.TEXT_NODE && /^ /.test(next.data)) {
+                next.splitText(1).before(br);
+                next.data = "\u00a0";
+            } else label.after(br);
+            continue;
+        }
+        widest = Math.max(widest, label.getBoundingClientRect().width / parseFloat(getComputedStyle(first).fontSize));
+        first.classList.add("response");
+        for (const p of more) p.classList.add("response-more");
+    }
+    // The column is as wide as the widest label on the page and a gap.
+    if (widest) root.style.setProperty("--label-column", (widest + 0.45).toFixed(2) + "em");
 }
 
 async function set(debug) {
@@ -98,7 +144,7 @@ async function set(debug) {
     // prayers.css tightens the word space for the browser's own justification;
     // this attribute lifts that, so the library measures the font's own space.
     root.dataset.justify = "on";
-    markShortResponses(all);
+    markResponses(all);
     const targets = all.filter((p) => getComputedStyle(p).textAlign === "justify");
     if (!targets.length) { release(); return; }
     // A reader's own stylesheet that sets letter or word spacing wins: the
@@ -146,8 +192,8 @@ export default function start() {
         clearTimeout(pending);
         pending = setTimeout(run, 200);
     };
-    // Which responses run to two lines depends on the column, so a change of
-    // width starts over. The library follows the width by itself otherwise.
+    // Which responses are short depends on the column, so a change of width
+    // starts over. The library follows the width by itself otherwise.
     let width = innerWidth;
     addEventListener("resize", () => {
         if (innerWidth === width) return;
