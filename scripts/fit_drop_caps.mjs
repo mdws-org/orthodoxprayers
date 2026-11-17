@@ -1,22 +1,35 @@
-// Writes drop-caps.js: for each capital, how far the text beside it should
-// stand from the capital's box so that it sits a fixed distance from the ink.
+// Writes drop-caps.js: for each capital, where the two lines beside it start.
 //
 // A drop cap is one rectangle to the browser, so every capital got the same
-// gap whatever its shape: the T's arm nearly touched the run-in while the
-// lines beside an O stood well clear. The printed prayer books fit each
-// letter. This script opens a page in WebKit, draws each capital at the size
-// and weight the page uses, and finds the rightmost ink beside line 1 and
-// beside line 2.
+// gap whatever its shape. The printed prayer books fit each letter, and they
+// fit the two lines differently:
 //
-//   fit   where line 2 starts, measured from the capital's advance width
-//         (negative: the line tucks under an overhang, at most TUCK)
-//   lead  how much further right line 1 starts than line 2
+//   line 1  is the rest of the opening word. It runs in to the capital at
+//           the height of its own letters: over the leg of an A or the foot
+//           of an L, beside the arm of a T.
+//   line 2  stands off the capital's rightmost ink below line 1's baseline.
+//           For a round letter that is the widest point of the bowl, which
+//           lies between the two lines; a T's arm is above it and does not
+//           count, so line 2 goes under the arm.
 //
-// A capital that is narrower at the top than at the foot (A, L, R) would
-// want line 1 further LEFT than line 2. A float cannot do that, so its line
-// 1 keeps line 2's edge.
+// CLEAR holds the two distances for each capital, in em of the body text,
+// from the capital's ink to the edge of the text's box. They were set by
+// rendering the site beside the St. Tikhon's Monastery Press prayer book
+// (Prayers for Morning, Day and Night, 2019) and matching, letter by letter,
+// the distance from the capital's ink to the text's ink on each line. The
+// book has A B G H I L M O R T W; the rest follow the nearest shape, and F,
+// P and T keep line 2 under the arm or bowl.
 //
-// Run after changing the font, the cap's size or weight, or the leading:
+// This script opens a page in WebKit, draws each capital at the size and
+// weight the page uses, finds its rightmost ink at the height of line 1 and
+// below line 1's baseline, and writes:
+//
+//   fit   the capital's right margin, in its own em: where line 2 starts
+//   lead  where line 1 starts from there, in em of the body text (negative
+//         where it starts further left)
+//
+// Run after changing the font, the cap's size, weight or position, or the
+// leading:
 //   node scripts/fit_drop_caps.mjs
 // Needs playwright-core and its WebKit build, as scripts/check_justify.mjs.
 import { writeFileSync } from "node:fs";
@@ -25,8 +38,16 @@ import { fileURLToPath } from "node:url";
 import { serve } from "./site_server.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const CLEAR = 0.14; // em of the body text between the capital's ink and the text
-const TUCK = 0.3;   // em: how far line 2 may sit under an overhang such as the T's arm
+// [line 1, line 2]: capital's ink to the text's box, in em of the body text.
+const CLEAR = {
+    A: [0.189, 0.396], B: [0.278, 0.197], C: [0.203, 0.112], D: [0.291, 0.192],
+    E: [0.263, 0.197], F: [0.033, 0.140], G: [0.208, 0.123], H: [0.221, 0.105],
+    I: [0.188, 0.132], J: [0.205, 0.136], K: [0.113, 0.136], L: [0.267, 0.312],
+    M: [0.225, 0.072], N: [0.145, 0.088], O: [0.233, 0.200], P: [0.220, -0.146],
+    Q: [0.133, 0.232], R: [0.188, 0.131], S: [0.133, 0.194], T: [0.109, 0.438],
+    U: [0.201, 0.105], V: [0.098, 0.346], W: [0.111, 0.319], X: [0.126, 0.124],
+    Y: [0.110, 0.371], Z: [0.198, 0.168],
+};
 const PAGE = "/morning/";
 
 const { base, close } = await serve(ROOT);
@@ -70,8 +91,9 @@ const measured = await page.evaluate(() => {
             return best < 0 ? 0 : (best / scale - inset) / em;
         };
         const b1 = baseline(first), b2 = baseline(second);
-        // Line 1 is the small-caps run-in: no ascenders or descenders. Line 2 is lower case.
-        out[letter] = { advance: cm.width / em, line1: reach(b1 - 0.5 * em, b1 + 0.06 * em), line2: reach(b2 - 0.72 * em, b2 + 0.24 * em), capEm: size / em };
+        // Line 1 is the small-caps run-in, as tall as a lower-case x. For line 2
+        // the capital counts from just under line 1's baseline to its own foot.
+        out[letter] = { advance: cm.width / em, line1: reach(b1 - 0.42 * em, b1 + 0.02 * em), low: reach(b1 + 0.08 * em, b2 + 0.02 * em), capEm: size / em };
     }
     return out;
 });
@@ -80,17 +102,18 @@ close();
 
 const rows = [];
 for (const [letter, m] of Object.entries(measured)) {
-    const edge = Math.max(m.line2, m.line1 - TUCK);
-    const fit = edge + CLEAR - m.advance, lead = Math.max(0, m.line1 - edge);
+    const [clear1, clear2] = CLEAR[letter];
+    const edge = m.low + clear2;
+    const fit = edge - m.advance, lead = m.line1 + clear1 - edge;
     // fit is a margin on the capital itself, so it is written in the capital's own em.
-    rows.push(`    ${letter}: [${(fit / m.capEm).toFixed(3)}, ${lead.toFixed(3)}],`);
+    rows.push(`    ${letter}: [${(fit / m.capEm).toFixed(4)}, ${lead.toFixed(3)}],`);
 }
 writeFileSync(join(ROOT, "drop-caps.js"), `// Written by scripts/fit_drop_caps.mjs; do not edit by hand.
 //
 // For each capital: [fit, lead]. fit is the right margin of the drop cap in
-// its own em, which places line 2 ${CLEAR}em of the body text from the
-// capital's ink (negative where the line tucks under an overhang). lead is
-// how much further right line 1 starts, in em of the body text.
+// its own em, which is where line 2 starts. lead is where line 1 starts from
+// there, in em of the body text: negative where the opening word runs in over
+// the capital's leg or foot. The distances behind them are in the script.
 export const FIT = {
 ${rows.join("\n")}
 };

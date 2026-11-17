@@ -1,7 +1,9 @@
 // Fails the build when the justified prayer prose comes out loose, changes
 // the text, runs off the column, or is not set again after the text size
-// changes; when a speaker's response is not set as one; when the leaf that
-// closes an optional passage leaves its last line; when a word that
+// changes; when a paragraph is left to the browser; when a line that belongs
+// beside a drop cap stands below it; when a speaker's response is not set as
+// one; when the leaf that closes an optional passage leaves its last line;
+// when a word that
 // justify-words.js protects is divided or has break points; and when a page
 // capitalises a word that file does not list.
 //
@@ -43,7 +45,7 @@ const browser = await webkit.launch({ headless: true, ...(process.env.WEBKIT_PAT
 // a gap is the distance between neighbouring words on a line, in units of
 // the font's own space advance.
 function measure() {
-    const out = { lines: 0, over2: 0, over25: 0, justified: 0, paragraphs: 0, wide: document.documentElement.scrollWidth > innerWidth + 1, text: [], divided: [], labelled: 0, unmarked: 0, leaves: 0, strayLeaves: 0 };
+    const out = { lines: 0, over2: 0, over25: 0, justified: 0, paragraphs: 0, wide: document.documentElement.scrollWidth > innerWidth + 1, text: [], divided: [], labelled: 0, unmarked: 0, leaves: 0, strayLeaves: 0, caps: 0, capsBelow: 0 };
     // The leaf that closes an optional passage stands after the last word,
     // on its line and inside the column.
     for (const leaf of document.querySelectorAll(".prayer p .leaf")) {
@@ -71,16 +73,25 @@ function measure() {
             const above = p.classList.contains("response-long") && p.querySelector(":scope > br.after-label");
             if (!beside && !above) out.unmarked++;
         }
-        // The library ties the opening word with a no-break space, and stands
-        // a word joiner (U+2060, no width) where it places the leaf that
-        // ends a paragraph; nothing else in the text may change.
-        const said = p.textContent.replace(/\u00a0/g, " ");
-        out.text.push(p.querySelector(".leaf") ? said.replace(/\u2060$/, "") : said);
+        // Setting the lines may not change a character of the text.
+        out.text.push(p.textContent);
         const cs = getComputedStyle(p);
         const set = !!p.querySelector('[class*="justif"]');
         if (cs.textAlign !== "justify" && !set) continue;
         out.paragraphs++;
         if (set) out.justified++;
+        // The two lines beside a drop cap start to the right of it. One that
+        // is set a hair too wide falls below the capital, to the margin.
+        if (set && getComputedStyle(p, "::first-letter").float === "left") {
+            out.caps++;
+            const rows = [];
+            for (const line of p.querySelectorAll('span[class*="justif"]')) {
+                const r = line.getBoundingClientRect();
+                if (!rows.some((top) => Math.abs(top - r.top) < r.height / 2)) rows.push(r.top);
+                if (rows.length <= 2 && r.left - p.getBoundingClientRect().left < parseFloat(cs.fontSize)) { out.capsBelow++; break; }
+                if (rows.length > 2) break;
+            }
+        }
         const probe = document.createElement("span");
         probe.style.cssText = "position:absolute;visibility:hidden;white-space:pre;word-spacing:0;letter-spacing:0;font-kerning:none";
         p.appendChild(probe);
@@ -196,8 +207,8 @@ for (const width of WIDTHS) {
         page.on("requestfailed", (r) => said.push(`request failed: ${r.url()}`));
         await page.goto(base + path + "?justify=debug", { waitUntil: "load" });
         // justify.js marks the page when the lines are set, or records that
-        // it gave up waiting for the library.
-        const finished = (timeout = 30000) => page.waitForFunction(() => document.documentElement.dataset.justifySet || document.documentElement.dataset.justifyStage === "timed out", null, { timeout })
+        // it gave up waiting, or that it took the lines back.
+        const finished = (timeout = 30000) => page.waitForFunction(() => document.documentElement.dataset.justifySet || ["timed out", "a line ran past the column"].includes(document.documentElement.dataset.justifyStage), null, { timeout })
             .then(() => page.evaluate(() => !!document.documentElement.dataset.justifySet), () => false);
         const set = off.paragraphs ? await finished() : true;
         const stalledAt = set ? "" : await page.evaluate(() => document.documentElement.dataset.justifyStage || "before the script ran");
@@ -218,6 +229,8 @@ for (const width of WIDTHS) {
         if (larger && !larger.set) failures.push(`${where}: the lines were not set again after the text size changed`);
         if (larger && (larger.paragraphs || larger.wide)) failures.push(`${where}: after the text size changed, ${larger.paragraphs} paragraphs run past the column, by up to ${larger.worst}px`);
         if (on.wide) failures.push(`${where}: the page is wider than the window`);
+        if (set && on.justified < on.paragraphs) failures.push(`${where}: ${on.paragraphs - on.justified} of ${on.paragraphs} paragraphs were left to the browser's justification`);
+        if (on.capsBelow) failures.push(`${where}: ${on.capsBelow} of ${on.caps} drop caps have a line below them that belongs beside them`);
         if (on.strayLeaves) failures.push(`${where}: ${on.strayLeaves} of ${on.leaves} closing leaves are off the last line of their passage`);
         if (set && on.justified && on.unmarked) failures.push(`${where}: ${on.unmarked} of ${on.labelled} paragraphs that open with a speaker's label are set neither beside the label nor under it`);
         if (on.text.join("\n") !== off.text.join("\n")) failures.push(`${where}: the prayer text differs once the lines are set`);
