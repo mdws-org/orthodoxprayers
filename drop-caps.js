@@ -36,3 +36,23 @@ export const FIT = {
 // After a one-letter word ("O Lord") line 1 keeps a thin space in place of
 // the word space, as the 2019 St. Tikhon's prayer book sets it.
 export const ONE_LETTER_LEAD = 0.16;
+
+// BETA ONLY: the fit measured against the printed book (St. Tikhon's morning
+// and evening prayers), for the thirteen capitals the site opens a prayer
+// with. Line 1 runs in to the capital at the book's distance, so a lead may
+// be negative; the site's own engine sets such a line, the library does not.
+export const FIT_BOOK = {
+    A: [0.0785, -0.881],
+    B: [0.0114, -0.030],
+    C: [0.0113, -0.056],
+    E: [0.0349, -0.051],
+    G: [-0.0205, -0.043],
+    H: [-0.0150, -0.109],
+    I: [0.0395, -0.220],
+    L: [0.0859, -1.185],
+    O: [-0.0162, 0.074],
+    P: [-0.0710, 0.380],
+    R: [0.0202, -0.596],
+    T: [-0.0490, 0.230],
+    U: [-0.1035, 0.294],
+};

@@ -282,6 +282,13 @@ h1 {
     font-weight: 500;
 }
 
+/* BETA ONLY, with the site's own engine: the capital sits on the second
+   line's baseline as the printed book's does (it hangs 0.13em below
+   otherwise), and the run-in's lead is a margin, so it can be negative and
+   bring line 1 in over the leg of an A or the foot of an L. */
+:root[data-engine="own"] .prayer p.opening::first-letter { padding-top: 0.022em; }
+:root[data-engine="own"] .prayer p.opening .runin { padding-left: 0; margin-left: var(--cap-lead, 0em); }
+
 /* In-prose links are rubrics: red is this book's native mark for "not the
    text -- attend differently", which is what a link is. Discoverable on
    touch with no hover, and no underline -- running text is never underlined

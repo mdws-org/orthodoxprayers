@@ -50,7 +50,7 @@ const scope = {
     clients: { claim: async () => {} },
 };
 scope.self = scope;
-vm.runInNewContext(src + "\n;globalThis.__v = VERSION; globalThis.__a = ASSETS;", scope);
+vm.runInNewContext(src + "\n;globalThis.__v = VERSION + (typeof BETA === \"string\" ? BETA : \"\"); globalThis.__a = ASSETS;", scope);
 version = scope.__v;
 const assets = scope.__a;
 const firstAsset = new URL(assets[1], origin).pathname;

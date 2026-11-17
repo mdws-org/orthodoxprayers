@@ -13,6 +13,7 @@
 // ?justify=debug reports what was set.
 
 import { PROTECTED, BREAKS } from "./justify-words.js";
+import { ENGINE } from "./engine-pref.js"; // BETA ONLY
 
 const KEY = "prayers-justify";
 const root = document.documentElement;
@@ -51,6 +52,8 @@ function preference() {
 }
 
 let controller = null;
+// Set by start(): runs the lines again after a font that came late.
+let lateFont = null;
 // Counts releases. A run that finds the count changed after waiting has been
 // overtaken by a later run and stops, so two runs never set the same lines.
 let generation = 0;
@@ -130,14 +133,20 @@ async function set(debug) {
     const stage = (name) => { if (debug) root.dataset.justifyStage = name; };
     stage("loading");
     const [{ justify }, { hyphenateEnUS }] = await Promise.all([
-        import("./vendor/justif/index.js"),
+        import(ENGINE === "own" ? "./own-engine.js" : "./vendor/justif/index.js"), // BETA ONLY: the choice
         import("./vendor/justif/hyphenate/en-us.js"),
     ]);
     if (mine !== generation) return;
-    // The library sets the lines again when a font arrives, so a font that is
-    // slow or never reports ready does not hold the page on the fallback.
+    // A font that is slow or never reports ready does not hold the page on
+    // the browser's own justification.
     stage("fonts");
-    if (document.fonts) await Promise.race([document.fonts.ready, new Promise((done) => setTimeout(done, 2000))]);
+    if (document.fonts) {
+        const arrived = await Promise.race([document.fonts.ready.then(() => true), new Promise((done) => setTimeout(() => done(false), 2000))]);
+        // Lines set in the fallback font stop short of the column, or run
+        // past it, once the real font is drawn: set them again when it comes.
+        // (The library does this by itself.)
+        if (!arrived && ENGINE === "own") document.fonts.ready.then(() => { if (lateFont) lateFont(); });
+    }
     if (mine !== generation) return;
     stage("setting");
 
@@ -155,10 +164,18 @@ async function set(debug) {
         return;
     }
     const skipped = [];
+    const began = performance.now();
     controller = justify(targets, {
         ...OPTIONS,
         hyphenate: wordRules(hyphenateEnUS),
         onSkip: debug ? (...why) => skipped.push(why) : undefined,
+    });
+    // BETA ONLY: what the panel shows.
+    const done = controller;
+    controller.ready.then(() => {
+        if (controller !== done) return;
+        root.dataset.justifyCount = `${done.managed.length} of ${targets.length}`;
+        root.dataset.justifyTook = (performance.now() - began).toFixed(0);
     });
     if (debug) {
         stage("set");
@@ -217,6 +234,7 @@ export default function start() {
             rerun();
         }).observe(em);
     }
+    lateFont = rerun;
     // Not every browser sends beforeprint, so the print media query is
     // watched as well.
     const toPaper = () => { printing = true; clearTimeout(pending); release(); };

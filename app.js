@@ -1,5 +1,6 @@
 // Theme toggle, install hint, run-in, masthead. ES module, deferred by default.
-import { FIT, ONE_LETTER_LEAD } from "./drop-caps.js";
+import { FIT, FIT_BOOK, ONE_LETTER_LEAD } from "./drop-caps.js";
+import { ENGINE } from "./engine-pref.js"; // BETA ONLY
 
 /* ---- Theme: one button toggling day <-> night ------------------------
    There is no "system" position on the button. A visitor with no stored
@@ -117,7 +118,7 @@ function markRunIn(p) {
         gap.textContent = space;
         p.insertBefore(gap, span);
     }
-    const fit = FIT[text[capEnd - 1]];
+    const fit = (ENGINE === "own" ? { ...FIT, ...FIT_BOOK } : FIT)[text[capEnd - 1]];
     if (fit) {
         p.style.setProperty("--cap-fit", fit[0] + "em");
         p.style.setProperty("--cap-lead", fit[1] + (space ? ONE_LETTER_LEAD : 0) + "em");
@@ -171,6 +172,9 @@ if (wink) {
 /* ---- Justified prose -------------------------------------------------- */
 // After the run-in above, which changes the opening paragraph's text nodes.
 import("./justify.js").then((m) => m.default()).catch(() => {});
+
+/* ---- BETA ONLY: the engine panel ------------------------------------- */
+if (/^(beta\.|localhost$|127\.0\.0\.1$)/.test(location.hostname)) import("./preview.js").catch(() => {});
 
 /* ---- PWA ------------------------------------------------------------- */
 if ("serviceWorker" in navigator) {
