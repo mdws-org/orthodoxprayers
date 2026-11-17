@@ -1,9 +1,7 @@
 // Offline shell for /. Precache everything fixed;
 // cache-first with network fallback. Bump VERSION on any asset change —
 // tbm releases are deliberate, so a manual version string is fine.
-const VERSION = "prayers-v61";
-// BETA ONLY: bumped with each change on the beta branch; main has no such line.
-const BETA = "-beta2";
+const VERSION = "prayers-v62";
 const BASE = "/";
 const ASSETS = [
     BASE,
@@ -51,11 +49,7 @@ const ASSETS = [
     BASE + "drop-caps.js",
     BASE + "justify.js",
     BASE + "justify-words.js",
-    BASE + "own-engine.js",
-    BASE + "engine-pref.js",
-    BASE + "preview.js",
-    BASE + "vendor/justif/index.js",
-    BASE + "vendor/justif/chunk-C566JZY6.js",
+    BASE + "justify-engine.js",
     BASE + "vendor/justif/chunk-ZW2EUTPS.js",
     BASE + "vendor/justif/hyphenate/en-us.js",
     BASE + "fonts/ebgaramond-var.woff2",
@@ -80,7 +74,7 @@ const ASSETS = [
 // immutable for a year, so a plain fetch could install last version's file.
 function fresh(path) {
     const url = new URL(path, self.location);
-    url.searchParams.set("v", VERSION + BETA);
+    url.searchParams.set("v", VERSION);
     return fetch(new Request(url, { cache: "reload" })).then((r) => {
         if (!r.ok) throw new Error(path + " answered " + r.status);
         return r;
@@ -89,7 +83,7 @@ function fresh(path) {
 
 self.addEventListener("install", (e) => {
     e.waitUntil(
-        caches.open(VERSION + BETA).then((c) =>
+        caches.open(VERSION).then((c) =>
             Promise.all(ASSETS.map((path) => fresh(path).then((r) => c.put(path, r))))
         ).then(() => self.skipWaiting())
     );
@@ -98,7 +92,7 @@ self.addEventListener("install", (e) => {
 self.addEventListener("activate", (e) => {
     e.waitUntil(
         caches.keys().then((keys) =>
-            Promise.all(keys.filter((k) => k !== VERSION + BETA).map((k) => caches.delete(k)))
+            Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))
         ).then(() => self.clients.claim())
     );
 });

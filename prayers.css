@@ -258,11 +258,14 @@ h1 {
 }
 
 /* The rest of the opening word runs in small caps after the initial
-   (markRunIn in app.js). */
+   (markRunIn in app.js). --cap-lead is where it starts, from the edge the
+   second line keeps: a margin, because for a capital that is narrower at
+   the top than at the foot (A, L, R) it is negative and brings the word in
+   over the leg, as the printed books set it. */
 .prayer p.opening .runin {
     font-variant: small-caps;
     letter-spacing: 0.05em;
-    padding-left: var(--cap-lead, 0em);
+    margin-left: var(--cap-lead, 0em);
 }
 /* The word space after a one-letter opening word ("O Lord"): kept in the
    text, given no width, so line 1 starts at the edge --cap-lead sets and
@@ -274,20 +277,15 @@ h1 {
     font-size: 3.4em;
     float: left;
     line-height: 0.82;
-    padding: 0.06em 0 0 0;
+    /* This much above the capital puts its foot on the second line's
+       baseline. */
+    padding: 0.022em 0 0 0;
     /* How far the lines beside the capital stand from its box. markRunIn
-       sets --cap-fit and --cap-lead for the letter from drop-caps.js, so the
-       text sits the same distance from an O's curve as from a T's arm. */
+       sets --cap-fit and --cap-lead for the letter from drop-caps.js, which
+       holds each capital's distances as the printed prayer book has them. */
     margin-right: var(--cap-fit, 0.04em);
     font-weight: 500;
 }
-
-/* BETA ONLY, with the site's own engine: the capital sits on the second
-   line's baseline as the printed book's does (it hangs 0.13em below
-   otherwise), and the run-in's lead is a margin, so it can be negative and
-   bring line 1 in over the leg of an A or the foot of an L. */
-:root[data-engine="own"] .prayer p.opening::first-letter { padding-top: 0.022em; }
-:root[data-engine="own"] .prayer p.opening .runin { padding-left: 0; margin-left: var(--cap-lead, 0em); }
 
 /* In-prose links are rubrics: red is this book's native mark for "not the
    text -- attend differently", which is what a link is. Discoverable on
@@ -594,8 +592,8 @@ button.gloss {
    as the service books bracket it. The leaf is EB Garamond's own U+2766,
    which the served subset does not carry, drawn as a mask in the rubric
    color; no character is added to the text. The closing leaf is an empty
-   inline-block element and not generated content: justify.js's library
-   does not set a paragraph that ends in generated content. */
+   inline-block element, which justify-engine.js keeps on the line with the
+   word it is tied to. */
 .rubric-line[data-leaf="open"]::before,
 .prayer p .leaf {
     display: inline-block;

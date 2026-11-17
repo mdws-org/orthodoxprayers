@@ -1,13 +1,22 @@
-// The site's own paragraph setter. BETA ONLY for now: see engine-pref.js.
+// Sets justified prose a paragraph at a time.
 //
-// justify(paragraphs, options) has the surface justify.js uses of the justif
-// library: it returns { managed, ready, destroy }. Each paragraph's breaks
-// are chosen for the whole paragraph (Knuth and Plass, total fit); a line is
-// one or more inline spans that do not wrap, with that line's word and
-// letter spacing; the space between two lines stays in the text as the only
-// place the browser may break. No character is added to or taken from the
-// text: a line-end hyphen is generated content, and the break opportunity
-// after it is an empty <wbr>.
+// A browser justifies one line at a time and can only widen word spaces. On
+// a phone's forty-character line that leaves one line in five with a gap
+// over twice the font's space. Here the breaks are chosen for the whole
+// paragraph (Knuth and Plass, total fit), a word space may close as well as
+// open, and what is left is spread over the letters of the line.
+//
+// justify(paragraphs, { hyphenate, onSkip }) returns { managed, ready,
+// destroy }. Each line becomes one or more inline spans that do not wrap,
+// carrying that line's word and letter spacing; the space between two lines
+// stays in the text and is the only place the browser may break. No
+// character is added to or taken from the text: a line-end hyphen is
+// generated content, and the break after it is an empty <wbr>.
+//
+// What it does not set, and leaves to the browser's own justification
+// through onSkip: a paragraph with a word wider than its line, and one with
+// an inline box that stands alone between two spaces. Text is taken as
+// left-to-right, and only the ASCII space separates words.
 
 const SPACE = { stretch: 0.5, shrink: 0.2 };   // of the font's own space
 const TRACK = 0.03;                            // of the line width, either way
@@ -15,7 +24,9 @@ const HYPHEN_COST = 60;
 const DOUBLE_HYPHEN = 4000;                    // two hyphenated lines in a row
 const MAX_HYPHEN_RUN = 2;
 const LOOSEST = 12;                            // ratio past which a line is refused
-const CLASS = "justif-own";
+const CLASS = "justified";
+// The class of a set line's spans, for the caller to find them by.
+export const LINE = CLASS;
 // How much of a character at the end of a line stands outside the column,
 // as a share of its width: a stop or a quotation mark hangs whole, the rest
 // in part. And how much of an opening quotation mark at the start of one.
@@ -381,7 +392,6 @@ function unset(p) {
 // ---- the whole page ------------------------------------------------------
 
 export function justify(paragraphs, options = {}) {
-    const began = performance.now();
     styles();
     const hyphenate = options.hyphenate || ((w) => [w]);
     const root = document.documentElement;
@@ -399,7 +409,6 @@ export function justify(paragraphs, options = {}) {
         if (cap) job.capEdge = capEdge(p, pieces, box.left + (parseFloat(cs.borderLeftWidth) || 0) + parseFloat(cs.paddingLeft));
         jobs.push(job);
     }
-    const t1 = performance.now();
     // 2. Measure the words.
     const measure = measurer();
     for (const j of jobs) {
@@ -408,8 +417,6 @@ export function justify(paragraphs, options = {}) {
         j.hyphen = measure.width(own, "-");
         j.chunks = tokens(j.p, j.pieces, j.cap, hyphenate, measure);
     }
-    const t2 = performance.now();
-    let tWrite = 0, t3 = 0;
     // 3. Choose the breaks and write the lines. If anything below throws,
     // every paragraph written so far is put back before the error goes on:
     // the caller has no controller yet to undo them with.
@@ -491,13 +498,10 @@ export function justify(paragraphs, options = {}) {
         // An inline box with a space on each side has no place in the text
         // to tie a line to, and the browser may put it on either line.
         if (j.chunks.some((chunk) => chunk.some((tok) => tok.kind === "word" && !tok.parts.length))) { skipped(j.p, "an inline box stands alone between spaces"); continue; }
-        const tw = performance.now();
         setParagraph(j.p, { pieces: j.pieces, lines });
-        tWrite += performance.now() - tw;
         j.lines = lines;
         managed.push(j.p);
     }
-    t3 = performance.now();
     // 4. The positions above are good to a pixel. Read where each justified
     // line really ends and take up the difference in its word spaces.
     // Twice: the first pass can be a little out where a line holds spans
@@ -533,9 +537,6 @@ export function justify(paragraphs, options = {}) {
         for (const j of jobs) if (j.p.classList.contains(CLASS + "-p") || j.p.querySelector("span." + CLASS)) unset(j.p);
         throw e;
     }
-    // How long the page took to set, and by phase, for measurement.
-    document.documentElement.dataset.justifyMs = (performance.now() - began).toFixed(1);
-    document.documentElement.dataset.justifyPhases = [t1 - began, t2 - t1, t3 - t2 - tWrite, tWrite, performance.now() - t3].map((x) => x.toFixed(0)).join("/");
     return {
         managed,
         ready: Promise.resolve(),

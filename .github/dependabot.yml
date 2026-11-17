@@ -1,0 +1,12 @@
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # A compromised action release is usually pulled within days of
+    # publication, so a release must be seven days old before it is adopted.
+    # Cooldown does not apply to Dependabot security updates.
+    cooldown:
+      default-days: 7
