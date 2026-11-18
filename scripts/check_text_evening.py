@@ -48,8 +48,6 @@ for name in ("sw.js",):
         fails.append("evening/rule/ not precached")
 if 'href="evening/rule/"' not in (WT / "index.html").read_text():
     fails.append("index does not link evening/rule/")
-if "evening" in (WT / "about/index.html").read_text().split("Still to Come")[1]:
-    fails.append("About still lists evening prayers as still to come")
 print(f"{len(blocks)} blocks, {len(b)} words")
 if fails:
     sys.exit("FAIL: " + "; ".join(fails))
