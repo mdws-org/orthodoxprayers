@@ -230,6 +230,10 @@ h1 {
         /* A short opening paragraph ends beside its initial; the next one
            starts below it. */
         .prayer > p.opening + p { clear: left; }
+        /* Separate notes (the About page), not continuous text: each stands
+           as its own entry, with space between and no indent. */
+        .prayer.notes > p:not(.refrain):has(+ p:not(.refrain)) { margin-bottom: 1em; }
+        .prayer.notes > p + p { text-indent: 0; }
     }
 }
 /* Small red cross above the section title, as the printed books head their
@@ -771,6 +775,8 @@ footer a::after,
     /* A response under a speaker's label starts at the margin, where the
        label reads as the start of the line. */
     .prayer > p + p:has(> .speaker:first-child) { text-indent: 0; }
+    .prayer.notes > p { margin-bottom: 0.8em; }
+    .prayer.notes > p + p { text-indent: 0; }
     /* The initial stands two lines deep. At the print leading two lines are
        2.6em, so the capital is smaller than on the screen and its box
        shorter: at the screen's size the box is deeper than two print lines
