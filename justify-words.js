@@ -42,7 +42,7 @@ const SAINTS = [
     "aaron", "abraham", "apostle", "apostles", "baptist", "benjamin", "chrysostom", "david",
     "ephraim", "gregory", "isaac", "israel", "jacob", "jesse", "joseph", "judah", "manasses",
     "martyrs", "melchisedech", "moses", "nicholas", "patriarchs", "peter", "phineas", "prophet",
-    "prophets", "saint", "saints", "samuel", "simon",
+    "prophets", "saint", "saints", "samuel", "simon", "sophrony",
 ];
 
 export const PROTECTED = new Set([...NAMES, ...EPITHETS, ...ANGELS, ...SAINTS]);
@@ -54,7 +54,7 @@ export const MAY_DIVIDE = new Set([
     "archbishop", "ascension", "assur", "babylon", "basan", "beatitudes", "behold", "birth",
     "bishop", "blessed", "blessings", "blood", "bread", "breath", "canaan", "canaanite", "canada",
     "canons", "cathedral", "catholic", "cause", "chaldeans", "church", "comfort", "coming",
-    "communion", "compline", "creation", "cross", "dallas", "dathan", "declare", "devil",
+    "commemoration", "common", "communion", "compline", "creation", "cross", "dallas", "damascus", "dathan", "declare", "devil",
     "divinely", "dread", "earth", "edomites", "egypt", "endor", "enemy", "ephrata", "epistle",
     "etham", "ethiopia", "ethiopians", "eucharist", "faith", "flesh", "fragrance", "fullness",
     "galaad", "garamond", "gebal", "gehenna", "gentiles", "gifts", "glory", "gospel", "governor",
@@ -62,7 +62,7 @@ export const MAY_DIVIDE = new Set([
     "horeb", "illustration", "immortality", "isabel", "ishmaelites", "jabin", "jerusalem", "jordan",
     "judas", "judgment", "kadesh", "kedar", "kingdom", "kishon", "ladder", "lebanon", "lesson",
     "license", "light", "living", "meadows", "mercy", "metropolitan", "metropolitans", "midian",
-    "monastery", "mount", "mountain", "mysteries", "mystery", "mystical", "nephthalim", "night",
+    "monastery", "morning", "moscow", "mount", "mountain", "mysteries", "mystery", "mystical", "nephthalim", "night",
     "origin", "orthodox", "paradise", "passion", "peace", "people", "personal", "pharaoh",
     "philistine", "philistines", "pilate", "ponomar", "pontius", "power", "prayer", "prayers",
     "precious", "president", "prodigal", "project", "prokeimenon", "protection", "psalm", "psalter",
