@@ -3,8 +3,8 @@
 // VERSION names the cache. CONTENT is the hash of the precached files it was
 // set for: python3 scripts/check_precache.py --write raises VERSION and writes
 // CONTENT when they change, and the check in CI fails when CONTENT is stale.
-const VERSION = "prayers-v65";
-const CONTENT = "5f8c2623a0c86f9f";
+const VERSION = "prayers-v66";
+const CONTENT = "42dfd3088ee00c40";
 const BASE = "/";
 const ASSETS = [
     // Pages: written from the page tree by scripts/check_precache.py --write.
