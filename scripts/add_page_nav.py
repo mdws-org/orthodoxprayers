@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Add previous/next links through the Communion pages, in the order they are read.
+"""Add previous/next links through the Three Canons, the Canon of Preparation, and
+the prayers before and after Communion, in the order they are read.
 
 The Psalter's .knav line, placed the same way: after the prayer, before the
 closing cross. A page that already has the line is left alone.
