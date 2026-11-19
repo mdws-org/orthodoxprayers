@@ -19,6 +19,12 @@ import { PROTECTED, BREAKS } from "./justify-words.js";
 
 const KEY = "prayers-justify";
 const root = document.documentElement;
+// Longest the page waits for its fonts before setting lines in the fallback
+// font; lines are set again when the font arrives.
+const FONT_WAIT_MS = 2000;
+// Longest a ?justify=debug run waits for the engine to finish before it marks
+// itself timed out, well inside the 30 s scripts/check_justify.mjs waits.
+const DEBUG_WAIT_MS = 5000;
 
 // At least three letters stay on each side of a break. A protected word
 // (justify-words.js) is never divided, and a word with hand-set break points
@@ -120,7 +126,7 @@ async function set(debug) {
     // the browser's own justification.
     stage("fonts");
     if (document.fonts) {
-        const arrived = await Promise.race([document.fonts.ready.then(() => true), new Promise((done) => setTimeout(() => done(false), 2000))]);
+        const arrived = await Promise.race([document.fonts.ready.then(() => true), new Promise((done) => setTimeout(() => done(false), FONT_WAIT_MS))]);
         // Lines set in the fallback font stop short of the column, or run
         // past it, once the real font is drawn: set them again when it comes.
         if (!arrived) document.fonts.ready.then(() => { if (lateFont) lateFont(); });
@@ -163,7 +169,7 @@ async function set(debug) {
         stage("set");
         const finished = await Promise.race([
             controller.ready.then(() => true),
-            new Promise((done) => setTimeout(() => done(false), 5000)),
+            new Promise((done) => setTimeout(() => done(false), DEBUG_WAIT_MS)),
         ]);
         if (mine !== generation) return;
         // The completion mark is what scripts/check_justify.mjs waits for; a
