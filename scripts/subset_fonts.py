@@ -12,9 +12,9 @@ list and the layout features are read back off the shipped subsets and kept,
 so a rebuild changes only what EXTRA adds. Add a character here before a page
 uses it; scripts/check_font_coverage.py fails the build otherwise.
 
-After a rebuild, raise VERSION in sw.js: the fonts are precached and served
-immutable, and the version bump is what makes installed copies fetch them
-again.
+After a rebuild, run python3 scripts/check_precache.py --write to raise
+VERSION in sw.js: the fonts are precached and served immutable, and the
+version bump is what makes installed copies fetch them again.
 """
 import sys
 from pathlib import Path

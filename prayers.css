@@ -129,11 +129,10 @@ main.page {
     padding: 2.6rem 1.5rem 2.2rem;
 }
 
-/* Ornaments are alpha-ink PNGs: black ink, transparent paper. Day shows
-   them as-is; night inverts the ink to off-white -- safe now that there is
-   no paper in the file to invert along with it. height:auto is load-bearing:
-   overriding an img's width in CSS while its height attribute still applies
-   is exactly the stretch bug this replaces. */
+/* Ornaments are SVGs of black ink on a transparent ground. Day shows them
+   as-is; night inverts the ink to off-white, and with no paper in the file
+   there is nothing else to invert. height:auto with aspect-ratio keeps the
+   image's height tied to its width, so a CSS width can never stretch it. */
 .ornament {
     display: block;
     height: auto;
@@ -148,9 +147,9 @@ main.page {
 
 /* The 404's spot icon. app.js deals one at random from art/icons/ on every
    load -- the masthead is appointed to the day like the printed books, but an
-   error page may smile. Height is fixed so the box cannot shift when the
-   image lands; the icons are all portrait-or-square so width follows. */
-/* Every deal gets the same em-box, like the plates of the printed books:
+   error page may smile. Height and width are both fixed, so the box cannot
+   shift when the image lands.
+   Every deal gets the same em-box, like the plates of the printed books:
    tall pieces cap by height, wide ones by width, so a narrow three-bar cross
    and a near-square star carry the same visual mass. contain keeps the
    drawing undistorted inside the square. */
@@ -389,9 +388,9 @@ h1 {
 .hint:active { opacity: 0.75; }
 .hint[hidden] { display: none; }
 
-/* The footer follows the content. margin-top:auto pinned it to the viewport
-   bottom instead, which on a tall window opened a field of blank page
-   between the closing cross and the footer. */
+/* The footer sits after the content, not pinned to the viewport bottom, so a
+   tall window leaves no blank space between the closing cross and the
+   footer. */
 footer {
     margin-top: 2.6rem;
     text-align: center;
