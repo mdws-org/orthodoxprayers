@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v4.4.0
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
       - name: css-touch-lint (hover, focus ring, :invalid, Tailwind flag, input size)
@@ -33,7 +33,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Check out
-        uses: actions/checkout@v4.4.0
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - name: Install gh-actions-lock
