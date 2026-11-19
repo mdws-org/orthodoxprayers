@@ -6,9 +6,12 @@
 // paragraph (Knuth and Plass, total fit), a word space may close as well as
 // open, and what is left is spread over the letters of the line.
 //
-// justify(paragraphs, { hyphenate, onSkip }) returns { managed, ready,
-// destroy }. Each line becomes one or more inline spans that do not wrap,
-// carrying that line's word and letter spacing; the space between two lines
+// justify(paragraphs, { hyphenate, onSkip, dropCap }) returns { managed,
+// ready, destroy, drop }. dropCap(p) says whether a paragraph opens on a
+// floated initial; without it the paragraph's ::first-letter is asked.
+// drop(p) puts one paragraph back and leaves the rest set. Each line
+// becomes one or more inline spans that do not wrap, carrying that line's
+// word and letter spacing; the space between two lines
 // stays in the text and is the only place the browser may break. No
 // character is added to or taken from the text: a line-end hyphen is
 // generated content, and the break after it is an empty <wbr>.
@@ -52,6 +55,8 @@ const isSpace = (c) => c === " " || c === "\n" || c === "\t" || c === "\r";
 // The paragraph as a flat run of pieces in document order: text nodes, the
 // elements that are single boxes (anything not display:inline), and forced
 // breaks.
+const REPLACED = /^(img|svg|picture|video|audio|canvas|iframe|object|embed|math|input|button|select|textarea)$/i;
+
 function flow(p) {
     const out = [];
     const walk = (el, tied) => {
@@ -61,9 +66,17 @@ function flow(p) {
             if (n.tagName === "BR") { out.push({ br: n }); continue; }
             if (n.tagName === "WBR") continue;
             const cs = getComputedStyle(n);
-            if (cs.display === "none") continue;
-            if (cs.display !== "inline") { out.push({ box: n, tied }); continue; }
+            // Out of the flow, a child takes no room on a line.
+            if (cs.display === "none" || cs.position === "absolute" || cs.position === "fixed") continue;
+            // A picture or a control is one box whatever its display says.
+            if (REPLACED.test(n.tagName) || (cs.display !== "inline" && cs.display !== "contents")) { out.push({ box: n, tied }); continue; }
+            // An inline element's own padding, border and margin take room
+            // on the line at each end of it (code on a wash of color).
+            const start = (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.paddingLeft) || 0);
+            const end = (parseFloat(cs.marginRight) || 0) + (parseFloat(cs.borderRightWidth) || 0) + (parseFloat(cs.paddingRight) || 0);
+            if (start > 0) out.push({ pad: start, before: true });
             walk(n, tied || cs.whiteSpace === "nowrap");
+            if (end > 0) out.push({ pad: end, before: false });
         }
     };
     walk(p, false);
@@ -74,14 +87,24 @@ function flow(p) {
 // drop cap and the first-line indent both show here. Left edges are from the
 // paragraph's content edge, by line.
 // How much of a paragraph's first text node the drop cap takes: any white
-// space the source has before the letter, and the letter.
+// space the source has before it, then what ::first-letter takes, which is
+// the letter with the punctuation that touches it on either side ('"I’').
+const FIRST_LETTER = /^\s*[\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}]*[\p{L}\p{N}][\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}]*/u;
 function capLength(text) {
+    const m = FIRST_LETTER.exec(text);
+    if (m) return m[0].length;
     const lead = text.length - text.trimStart().length;
     return Math.min(text.length, lead + (text.codePointAt(lead) > 0xffff ? 2 : 1));
 }
 
+// The text node the paragraph's first letter is in: source white space
+// before an opening element is a node of its own.
+function opener(pieces) {
+    return pieces.find((x) => x.text && /\S/.test(x.text.data)) || pieces.find((x) => x.text);
+}
+
 function lineStarts(p, pieces, skipFirst) {
-    const first = pieces.find((x) => x.text);
+    const first = opener(pieces);
     if (!first) return [];
     const r = document.createRange();
     r.setStart(first.text, skipFirst ? capLength(first.text.data) : 0);
@@ -109,6 +132,9 @@ function lineStarts(p, pieces, skipFirst) {
 function capEdge(p, pieces, contentLeft) {
     const el = [...p.children].find((x) => x.getClientRects().length && getComputedStyle(x).display === "inline");
     if (!el) return null;
+    // Only an element that follows the capital directly starts at its edge.
+    const before = el.previousSibling;
+    if (!before || before.nodeType !== Node.TEXT_NODE || before !== opener(pieces).text || capLength(before.data) !== before.length) return null;
     const edge = el.getClientRects()[0].left - (parseFloat(getComputedStyle(el).marginLeft) || 0) - contentLeft;
     let lead = 0;
     const word = pieces.find((x, i) => x.text && /\S/.test(i === pieces.findIndex((y) => y.text) ? x.text.data.slice(1) : x.text.data));
@@ -158,7 +184,7 @@ function measurer() {
             }
             byFont.set(key, f);
         }
-        c = { f, el, ls, size };
+        c = { f, el, ls, size, whole: /none|manual/.test(cs.webkitHyphens || cs.hyphens || "") };
         byElement.set(el, c);
         return c;
     };
@@ -177,16 +203,30 @@ function measurer() {
 
 // Words, spaces and forced breaks, with measured widths.
 function tokens(p, pieces, skipFirst, hyphenate, measure) {
-    const chunks = [[]];
-    let word = null, firstText = true;
+    const chunks = [new Array()];
+    let word = null, lead = 0;
+    const capNode = skipFirst ? opener(pieces) : null;
+    // Beside a drop cap the room before the first word is where line 1
+    // starts (capEdge), not part of the word.
+    let afterCap = !!capNode;
+    const open = (tied) => { word = { kind: "word", parts: [], boxes: [], extra: afterCap ? 0 : lead, tied }; lead = 0; afterCap = false; };
     const close = () => { if (word) { chunks[chunks.length - 1].push(word); word = null; } };
     for (let i = 0; i < pieces.length; i++) {
         const piece = pieces[i];
         if (piece.br) { close(); chunks.push([]); continue; }
+        if (piece.pad) {
+            // Room at the start of an element goes with the word that follows
+            // it, room at the end with the word before.
+            if (piece.before) { lead += piece.pad; continue; }
+            const chunk = chunks[chunks.length - 1];
+            const last = word || [...chunk].reverse().find((x) => x.kind === "word");
+            if (last) last.extra += piece.pad;
+            continue;
+        }
         if (piece.box) {
             const cs = getComputedStyle(piece.box);
             const w = piece.box.getBoundingClientRect().width + (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0);
-            if (!word) word = { kind: "word", parts: [], boxes: [], extra: 0, tied: true };
+            if (!word) open(true);
             word.extra += w;
             word.boxes.push(piece.box);
             word.tied = true;
@@ -194,7 +234,7 @@ function tokens(p, pieces, skipFirst, hyphenate, measure) {
         }
         const t = piece.text, s = t.data;
         let k = 0;
-        if (firstText) { firstText = false; if (skipFirst) k = capLength(s); }
+        if (piece === capNode) k = capLength(s);
         while (k < s.length) {
             if (isSpace(s[k])) {
                 close();
@@ -208,7 +248,7 @@ function tokens(p, pieces, skipFirst, hyphenate, measure) {
             } else {
                 let e = k;
                 while (e < s.length && !isSpace(s[e])) e++;
-                if (!word) word = { kind: "word", parts: [], boxes: [], extra: 0, tied: false };
+                if (!word) open(false);
                 word.parts.push({ i, from: k, to: e });
                 if (piece.tied) word.tied = true;
                 k = e;
@@ -247,7 +287,10 @@ function tokens(p, pieces, skipFirst, hyphenate, measure) {
             while ((m = run.exec(text))) {
                 const end = m.index + m[0].length;
                 if (/^[\u2014\u2013-]$/.test(m[0])) { if (m.index > 0 && end < text.length) at(end, false); continue; }
-                if (m[0].length < 6) continue;
+                // Not where the element forbids hyphens (code), and not in a
+                // word with letters beyond A to Z: the patterns are American
+                // English, and the rest of such a word is not a word.
+                if (m[0].length < 6 || pieces[a.i].ctx.whole || /[^\x00-\x7f]/.test(text)) continue;
                 let off = m.index;
                 const syllables = hyphenate(m[0].toLowerCase());
                 for (let j = 0; j < syllables.length - 1; j++) { off += syllables[j].length; at(off, true); }
@@ -401,7 +444,7 @@ export function justify(paragraphs, options = {}) {
     const jobs = [];
     for (const p of paragraphs) {
         const cs = getComputedStyle(p), box = p.getBoundingClientRect();
-        const cap = getComputedStyle(p, "::first-letter").float === "left";
+        const cap = options.dropCap ? options.dropCap(p) : getComputedStyle(p, "::first-letter").float === "left";
         const pieces = flow(p);
         if (!pieces.some((x) => x.text)) { skipped(p, "no text"); continue; }
         const edges = (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.borderRightWidth) || 0) + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
@@ -541,5 +584,12 @@ export function justify(paragraphs, options = {}) {
         managed,
         ready: Promise.resolve(),
         destroy() { for (const p of managed) unset(p); },
+        // Puts one paragraph back as it was and leaves the rest set.
+        drop(p) {
+            const i = managed.indexOf(p);
+            if (i < 0) return;
+            managed.splice(i, 1);
+            unset(p);
+        },
     };
 }
