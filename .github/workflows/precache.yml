@@ -1,6 +1,7 @@
-# Fails the build when sw.js's hand-maintained precache list and the page
-# tree disagree, in either direction. Without this, a page added without a
-# matching ASSETS entry works online and silently fails offline.
+# Fails the build when sw.js's precache list and the page tree disagree, in
+# either direction, or when a precached file changed and sw.js's VERSION did
+# not. Without this, a page added without a matching ASSETS entry works online
+# and silently fails offline, and a changed file reaches returning readers late.
 #
 # Also fails it when a page set from the prayer book stops matching the book
 # word for word (outside the edits each check lists), or when a glossary note

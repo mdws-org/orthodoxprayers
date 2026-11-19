@@ -49,10 +49,13 @@ theme.
 `app.js` handles theme cycling, the small-caps run-in after each drop cap,
 ornament rotation, and service worker registration.
 
-`sw.js` caches the site for offline use. Raise `VERSION` after you change any
-cached file, or returning visitors keep the old copy.
+`sw.js` caches the site for offline use. After you change a page or any
+cached file, run `python3 scripts/check_precache.py --write`: it lists every
+page in the precache and raises `VERSION` when a cached file changed, or
+returning visitors keep the old copy. The same script without `--write` runs
+in CI and fails when either is out of date.
 
-`scripts/build_pages.py` rebuilds the pages set from the prayer book (the evening rule, the Communion pages, Compline and the Three Canons) from `scripts/pg34981.txt`, and the Typika from `scripts/obednitsa.txt` and `scripts/hapgood.txt`, then adds the glossary notes and the Communion page links. Edit those pages through the scripts, not by hand, or the next rebuild overwrites the edit. After a rebuild, run the `scripts/check_*.py` checks, which CI also runs, and raise `VERSION` in `sw.js`.
+`scripts/build_pages.py` rebuilds the pages set from the prayer book (the evening rule, the Communion pages, Compline and the Three Canons) from `scripts/pg34981.txt`, and the Typika from `scripts/obednitsa.txt` and `scripts/hapgood.txt`, then adds the glossary notes and the Communion page links. Edit those pages through the scripts, not by hand, or the next rebuild overwrites the edit. A rebuild ends by writing the precache list and `VERSION` in `sw.js`; then run the `scripts/check_*.py` checks, which CI also runs.
 
 `art/bars/` holds the ornament bars. The site picks one per day from the date.
 
