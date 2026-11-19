@@ -1,27 +1,29 @@
 // Offline shell for /. Precache everything fixed;
-// cache-first with network fallback. Bump VERSION on any asset change —
-// tbm releases are deliberate, so a manual version string is fine.
+// cache-first with network fallback.
+// VERSION names the cache. CONTENT is the hash of the precached files it was
+// set for: python3 scripts/check_precache.py --write raises VERSION and writes
+// CONTENT when they change, and the check in CI fails when CONTENT is stale.
 const VERSION = "prayers-v65";
+const CONTENT = "5f8c2623a0c86f9f";
 const BASE = "/";
 const ASSETS = [
+    // Pages: written from the page tree by scripts/check_precache.py --write.
     BASE,
     BASE + "about/",
-    BASE + "morning/",
-    BASE + "morning/rule/",
-    BASE + "morning/daybreak/",
+    BASE + "canons/",
     BASE + "commemorations/",
-    BASE + "hours/",
-    BASE + "table/",
-    BASE + "typika/",
     BASE + "common/",
+    BASE + "communion/",
+    BASE + "communion/canon/",
+    BASE + "communion/thanksgiving/",
     BASE + "compline/",
     BASE + "evening/",
     BASE + "evening/rule/",
     BASE + "evening/sleep/",
-    BASE + "canons/",
-    BASE + "communion/canon/",
-    BASE + "communion/",
-    BASE + "communion/thanksgiving/",
+    BASE + "hours/",
+    BASE + "morning/",
+    BASE + "morning/daybreak/",
+    BASE + "morning/rule/",
     BASE + "psalter/",
     BASE + "psalter/kathisma-1/",
     BASE + "psalter/kathisma-2/",
@@ -43,6 +45,9 @@ const ASSETS = [
     BASE + "psalter/kathisma-18/",
     BASE + "psalter/kathisma-19/",
     BASE + "psalter/kathisma-20/",
+    BASE + "table/",
+    BASE + "typika/",
+    // Files every page uses, listed by hand.
     BASE + "prayers.css",
     BASE + "theme.js",
     BASE + "app.js",
