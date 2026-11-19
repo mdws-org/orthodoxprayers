@@ -115,8 +115,9 @@ function measure() {
                 const mid = (rs[0].top + rs[0].bottom) / 2;
                 if (!spaced && before && Math.abs(mid - before.mid) > lh * 0.45) {
                     const head = (before.text.match(/[A-Za-z]+$/) || [""])[0], tail = (m[0].match(/^[A-Za-z]+/) || [""])[0];
-                    // A drop cap sits apart from the rest of its word; a real
-                    // division leaves at least three letters on each side.
+                    // A drop cap is one letter set apart from the rest of its
+                    // word, so a piece of one letter is a drop cap, not a
+                    // division; two or more letters on each side is a division.
                     if (head.length > 1 && tail.length > 1) out.divided.push(head + "-" + tail);
                 }
                 const last = rs[rs.length - 1];

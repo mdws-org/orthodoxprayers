@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Rebuild every page set from the prayer book, in the order the steps need.
 
-1. pages_evening, pages_communion, pages_compline_canons write the seven
+1. pages_evening, pages_communion, pages_compline_canons write the six
    book pages fresh from pg34981.txt; pages_typika writes the Typika from
    obednitsa.txt and hapgood.txt.
 2. add_glossary adds the tap-to-read notes to those pages and rewrites the
    notes on every other page that has them.
-3. add_page_nav adds the previous/next line through the Communion pages.
+3. add_page_nav adds the previous/next line through the Three Canons and the
+   Communion pages.
 4. set_rubrics marks notes, prefaces and small caps in the rubrics of every
    page.
 
